@@ -5,6 +5,8 @@ using Microsoft.Kinect;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System;
+using System.Windows.Shapes;
+using System.Windows.Controls;
 
 namespace KCoach
 {
@@ -98,6 +100,7 @@ namespace KCoach
                 if (frame != null)
                 {
                     canvas.Children.Clear();
+                    // canvas.UpdateLayout();
 
                     bodies = new Body[frame.BodyFrameSource.BodyCount];
 
@@ -109,7 +112,8 @@ namespace KCoach
                             if (body.IsTracked)
                             {
                                 // Draw skeleton.
-                                canvas.DrawSkeleton(body);
+
+                                canvas.DrawSkeleton(body, sensor);
                             }
                         }
                     }

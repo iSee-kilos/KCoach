@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -139,46 +140,68 @@ namespace KCoach
             return value;
         }
 
+        public static Point Project(this Joint joint, KinectSensor sensor)
+        {
+            CameraSpacePoint jointPosition = joint.Position;
+
+            // 2D space point
+            Point point = new Point();
+
+            ColorSpacePoint colorPoint = sensor.CoordinateMapper.MapCameraPointToColorSpace(jointPosition);
+
+            point.X = float.IsInfinity(colorPoint.X) ? 0 : colorPoint.X;
+            point.Y = float.IsInfinity(colorPoint.Y) ? 0 : colorPoint.Y;
+            return point;
+        }
+
         #endregion
 
         #region Drawing
 
-        public static void DrawSkeleton(this Canvas canvas, Body body)
+        private static Point scalePoint(Point p, double actualWidth, double actualHeight)
         {
-            if (body == null) return;
-           
-            foreach (Joint joint in body.Joints.Values)
-            {
-                DrawJoint(canvas, joint);
-            }
-
-            canvas.DrawBone(body.Joints[JointType.Head], body.Joints[JointType.Neck]);
-            canvas.DrawBone(body.Joints[JointType.Neck], body.Joints[JointType.SpineShoulder]);
-            canvas.DrawBone(body.Joints[JointType.SpineShoulder], body.Joints[JointType.ShoulderLeft]);
-            canvas.DrawBone(body.Joints[JointType.SpineShoulder], body.Joints[JointType.ShoulderRight]);
-            canvas.DrawBone(body.Joints[JointType.SpineShoulder], body.Joints[JointType.SpineMid]);
-            canvas.DrawBone(body.Joints[JointType.ShoulderLeft], body.Joints[JointType.ElbowLeft]);
-            canvas.DrawBone(body.Joints[JointType.ShoulderRight], body.Joints[JointType.ElbowRight]);
-            canvas.DrawBone(body.Joints[JointType.ElbowLeft], body.Joints[JointType.WristLeft]);
-            canvas.DrawBone(body.Joints[JointType.ElbowRight], body.Joints[JointType.WristRight]);
-            canvas.DrawBone(body.Joints[JointType.WristLeft], body.Joints[JointType.HandLeft]);
-            canvas.DrawBone(body.Joints[JointType.WristRight], body.Joints[JointType.HandRight]);
-            canvas.DrawBone(body.Joints[JointType.HandLeft], body.Joints[JointType.HandTipLeft]);
-            canvas.DrawBone(body.Joints[JointType.HandRight], body.Joints[JointType.HandTipRight]);
-            canvas.DrawBone(body.Joints[JointType.HandTipLeft], body.Joints[JointType.ThumbLeft]);
-            canvas.DrawBone(body.Joints[JointType.HandTipRight], body.Joints[JointType.ThumbRight]);
-            canvas.DrawBone(body.Joints[JointType.SpineMid], body.Joints[JointType.SpineBase]);
-            canvas.DrawBone(body.Joints[JointType.SpineBase], body.Joints[JointType.HipLeft]);
-            canvas.DrawBone(body.Joints[JointType.SpineBase], body.Joints[JointType.HipRight]);
-            canvas.DrawBone(body.Joints[JointType.HipLeft], body.Joints[JointType.KneeLeft]);
-            canvas.DrawBone(body.Joints[JointType.HipRight], body.Joints[JointType.KneeRight]);
-            canvas.DrawBone(body.Joints[JointType.KneeLeft], body.Joints[JointType.AnkleLeft]);
-            canvas.DrawBone(body.Joints[JointType.KneeRight], body.Joints[JointType.AnkleRight]);
-            canvas.DrawBone(body.Joints[JointType.AnkleLeft], body.Joints[JointType.FootLeft]);
-            canvas.DrawBone(body.Joints[JointType.AnkleRight], body.Joints[JointType.FootRight]);
+            Point newPoint = new Point();
+            newPoint.X = p.X * actualWidth / 1920;
+            newPoint.Y = p.Y * actualHeight / 1080;
+            return newPoint;
         }
 
-        public static void DrawJoint(this Canvas canvas, Joint joint)
+        public static void DrawSkeleton(this Canvas canvas, Body body, KinectSensor senser)
+        {
+            if (body == null) return;
+            
+            foreach (Joint joint in body.Joints.Values)
+            {
+                DrawJoint(canvas, joint, senser);
+            }
+
+            canvas.DrawBone(body.Joints[JointType.Head], body.Joints[JointType.Neck], senser);
+            canvas.DrawBone(body.Joints[JointType.Neck], body.Joints[JointType.SpineShoulder], senser);
+            canvas.DrawBone(body.Joints[JointType.SpineShoulder], body.Joints[JointType.ShoulderLeft], senser);
+            canvas.DrawBone(body.Joints[JointType.SpineShoulder], body.Joints[JointType.ShoulderRight], senser);
+            canvas.DrawBone(body.Joints[JointType.SpineShoulder], body.Joints[JointType.SpineMid], senser);
+            canvas.DrawBone(body.Joints[JointType.ShoulderLeft], body.Joints[JointType.ElbowLeft], senser);
+            canvas.DrawBone(body.Joints[JointType.ShoulderRight], body.Joints[JointType.ElbowRight], senser);
+            canvas.DrawBone(body.Joints[JointType.ElbowLeft], body.Joints[JointType.WristLeft], senser);
+            canvas.DrawBone(body.Joints[JointType.ElbowRight], body.Joints[JointType.WristRight], senser);
+            canvas.DrawBone(body.Joints[JointType.WristLeft], body.Joints[JointType.HandLeft], senser);
+            canvas.DrawBone(body.Joints[JointType.WristRight], body.Joints[JointType.HandRight], senser);
+            canvas.DrawBone(body.Joints[JointType.HandLeft], body.Joints[JointType.HandTipLeft], senser);
+            canvas.DrawBone(body.Joints[JointType.HandRight], body.Joints[JointType.HandTipRight], senser);
+            canvas.DrawBone(body.Joints[JointType.HandTipLeft], body.Joints[JointType.ThumbLeft], senser);
+            canvas.DrawBone(body.Joints[JointType.HandTipRight], body.Joints[JointType.ThumbRight], senser);
+            canvas.DrawBone(body.Joints[JointType.SpineMid], body.Joints[JointType.SpineBase], senser);
+            canvas.DrawBone(body.Joints[JointType.SpineBase], body.Joints[JointType.HipLeft], senser);
+            canvas.DrawBone(body.Joints[JointType.SpineBase], body.Joints[JointType.HipRight], senser);
+            canvas.DrawBone(body.Joints[JointType.HipLeft], body.Joints[JointType.KneeLeft], senser);
+            canvas.DrawBone(body.Joints[JointType.HipRight], body.Joints[JointType.KneeRight], senser);
+            canvas.DrawBone(body.Joints[JointType.KneeLeft], body.Joints[JointType.AnkleLeft], senser);
+            canvas.DrawBone(body.Joints[JointType.KneeRight], body.Joints[JointType.AnkleRight], senser);
+            canvas.DrawBone(body.Joints[JointType.AnkleLeft], body.Joints[JointType.FootLeft], senser);
+            canvas.DrawBone(body.Joints[JointType.AnkleRight], body.Joints[JointType.FootRight], senser);
+        }
+
+        public static void DrawJoint(this Canvas canvas, Joint joint, KinectSensor sensor)
         {
             if (joint.TrackingState == TrackingState.NotTracked) return;
             Color c = Colors.Red;
@@ -190,18 +213,20 @@ namespace KCoach
             }
 
 
-            joint = joint.ScaleTo(canvas.ActualWidth, canvas.ActualHeight);
-
-            DrawPoint(canvas, joint.Position, c, inferred);
+            // joint = joint.ScaleTo(canvas.ActualWidth, canvas.ActualHeight);
+            Point p = scalePoint(joint.Project(sensor), canvas.ActualWidth, canvas.ActualHeight);
+            // Console.WriteLine("Position: " + p.X + " " + p.Y + "canvas size: " + canvas.Width + " " + canvas.Height);
+            // WirteText(canvas, joint.Project(sensor), "Position: " + joint.Project(sensor).X + ":" + joint.Project(sensor).Y);
+            DrawPoint(canvas, p, c, inferred);
         }
 
 
-        public static void DrawBone(this Canvas canvas, Joint first, Joint second)
+        public static void DrawBone(this Canvas canvas, Joint first, Joint second, KinectSensor sensor)
         {
             if (first.TrackingState == TrackingState.NotTracked || second.TrackingState == TrackingState.NotTracked) return;
 
-            first = first.ScaleTo(canvas.ActualWidth, canvas.ActualHeight);
-            second = second.ScaleTo(canvas.ActualWidth, canvas.ActualHeight);
+            // first = first.ScaleTo(canvas.ActualWidth, canvas.ActualHeight);
+            // second = second.ScaleTo(canvas.ActualWidth, canvas.ActualHeight);
 
             Color c = Colors.Yellow;
             Boolean inferred = false;
@@ -211,10 +236,12 @@ namespace KCoach
                 inferred = true;
             }
 
-            DrawLine(canvas, first.Position, second.Position, c, inferred);
+            Point firstP = scalePoint(first.Project(sensor), canvas.ActualWidth, canvas.ActualHeight);
+            Point secondP = scalePoint(second.Project(sensor), canvas.ActualWidth, canvas.ActualHeight);
+            DrawLine(canvas, firstP, secondP, c, inferred);
         }
 
-        public static void DrawPoint(this Canvas canvas, CameraSpacePoint position, Color c, Boolean inferred)
+        public static void DrawPoint(this Canvas canvas, Point position, Color c, Boolean inferred)
         {
             SolidColorBrush fill = new SolidColorBrush(c);
             if (inferred)
@@ -232,9 +259,11 @@ namespace KCoach
             Canvas.SetTop(ellipse, position.Y - ellipse.Height / 2);
 
             canvas.Children.Add(ellipse);
+            // WirteText(canvas, position, "Position: " + position.X + ":" + position.Y + "\ncanvas actual size: " + canvas.ActualWidth + ":" + canvas.ActualHeight);
+
         }
 
-        public static void DrawLine(this Canvas canvas, CameraSpacePoint first, CameraSpacePoint second, Color c, Boolean inferred)
+        public static void DrawLine(this Canvas canvas, Point first, Point second, Color c, Boolean inferred)
         {
             SolidColorBrush fill = new SolidColorBrush(c);
             if (inferred)
@@ -255,7 +284,19 @@ namespace KCoach
             canvas.Children.Add(line);
         }
 
+        public static void WirteText(this Canvas canvas, Point p, String text)
+        {
+            TextBlock textBlock = new TextBlock();
+            // textBlock.UpdateLayout();
 
+            // Position of label centered to given position
+
+            Canvas.SetLeft(textBlock, p.X);
+            Canvas.SetTop(textBlock, p.Y);
+            textBlock.Text = text;
+
+            canvas.Children.Add(textBlock); // Add to Canvas
+        }
         #endregion
     }
 }
