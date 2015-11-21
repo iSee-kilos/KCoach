@@ -146,10 +146,13 @@ namespace KCoach
                             {
                                 // Draw skeleton.
                                 var angles = body.GetJointAngles();
-                                var wrongJoints = match(currentAction.Template, angles);
-                                canvas.DrawSkeleton(body, sensor, steadyFlag);
-                                if (steadyFlag)
-                                    canvas.DrawWrongJoints(body, wrongJoints, sensor);
+                                if (currentAction != null)
+                                {
+                                    var wrongJoints = match(currentAction.Template, angles);
+                                    canvas.DrawSkeleton(body, sensor, steadyFlag);
+                                    if (steadyFlag)
+                                        canvas.DrawWrongJoints(body, wrongJoints, sensor);
+                                }
                             }
                         }
                     }
@@ -218,6 +221,9 @@ namespace KCoach
         {
             var unmatchTypes = new List<JointType>();
             var delta = 10;
+
+            if (template == null || action == null)
+                return unmatchTypes.ToArray();
 
 
             foreach (var kv in template)
