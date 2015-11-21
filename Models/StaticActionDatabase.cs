@@ -18,8 +18,10 @@ namespace KCoach
         {
             var squatTemplate = new Dictionary<JointType, int>()
             {
-                {JointType.AnkleLeft, 80 },
-                {JointType.AnkleRight, 80 }
+                {JointType.KneeLeft, 180 },
+                {JointType.KneeRight, 180 },
+                {JointType.SpineBase, 180 },
+                {JointType.SpineMid, 180 }
             };
 
             items.Add(new Action("Squat",

@@ -25,17 +25,6 @@ namespace KCoach
 
         private static int IS_STEADY = 30;
 
-        private static Dictionary<JointType, int> standard;
-
-        public void setStandard()
-        {
-            standard = new Dictionary<JointType, int>();
-            standard[JointType.KneeLeft] = 180;
-            standard[JointType.KneeRight] = 180;
-            standard[JointType.SpineBase] = 180;
-            standard[JointType.SpineMid] = 180;
-        }
-
         private bool inMatch = false;
 
         private Action currentAction = null;
@@ -86,9 +75,6 @@ namespace KCoach
             this.bones.Add(new Tuple<JointType, JointType>(JointType.HipLeft, JointType.KneeLeft));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.KneeLeft, JointType.AnkleLeft));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.AnkleLeft, JointType.FootLeft));
-
-            setStandard();
-
 
             this.sensor = KinectSensor.GetDefault();
             if (sensor != null)
@@ -160,7 +146,7 @@ namespace KCoach
                             {
                                 // Draw skeleton.
                                 var angles = body.GetJointAngles();
-                                var wrongJoints = match(standard, angles);
+                                var wrongJoints = match(currentAction.Template, angles);
                                 canvas.DrawSkeleton(body, sensor, steadyFlag);
                                 if (steadyFlag)
                                     canvas.DrawWrongJoints(body, wrongJoints, sensor);
@@ -228,10 +214,10 @@ namespace KCoach
             return true;
         }
 
-        private JointType[] match(IReadOnlyDictionary<JointType, int> template, IReadOnlyDictionary<JointType, int> action)
+        private JointType[] match(IDictionary<JointType, int> template, IReadOnlyDictionary<JointType, int> action)
         {
             var unmatchTypes = new List<JointType>();
-            var delta = 5;
+            var delta = 10;
 
 
             foreach (var kv in template)
