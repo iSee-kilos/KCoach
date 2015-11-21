@@ -422,6 +422,8 @@ namespace KCoach
             lengtha = Math.Pow(lengtha, 0.5);
             double lengthb = Math.Pow(xb, 2) + Math.Pow(yb, 2) + Math.Pow(zb, 2);
             lengthb = Math.Pow(lengthb, 0.5);
+            if (lengtha == 0 || lengthb == 0)
+                return 180;
             double angle = Math.Acos(ans / (lengtha * lengthb)) / Math.PI * 180;
             return Convert.ToInt32(angle);
         }

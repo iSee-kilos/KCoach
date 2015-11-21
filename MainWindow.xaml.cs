@@ -28,17 +28,6 @@ namespace KCoach
 
         private static int IS_STEADY = 30;
 
-        private static Dictionary<JointType, int> squat;
-
-        private void setSquat()
-        {
-            squat = new Dictionary<JointType, int>();
-            squat[JointType.KneeLeft] = 180;
-            squat[JointType.KneeRight] = 180;
-            squat[JointType.SpineBase] = 180;
-            squat[JointType.SpineMid] = 180;
-        }
-
         private bool inMatch = false;
 
         private Action currentAction = null;
@@ -89,8 +78,6 @@ namespace KCoach
             this.bones.Add(new Tuple<JointType, JointType>(JointType.HipLeft, JointType.KneeLeft));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.KneeLeft, JointType.AnkleLeft));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.AnkleLeft, JointType.FootLeft));
-
-            setSquat();
 
             InitializeComponent();
 
@@ -177,10 +164,13 @@ namespace KCoach
                             {
                                 // Draw skeleton.
                                 var angles = body.GetJointAngles();
-                                var wrongJoints = match(squat, angles);
-                                canvas.DrawSkeleton(body, sensor, steadyFlag);
-                                if (steadyFlag)
-                                    canvas.DrawWrongJoints(body, wrongJoints, sensor);
+                                if (currentAction != null)
+                                {
+                                    var wrongJoints = match(currentAction.Template, angles);
+                                    canvas.DrawSkeleton(body, sensor, steadyFlag);
+                                    if (steadyFlag)
+                                        canvas.DrawWrongJoints(body, wrongJoints, sensor);
+                                }
                             }
                         }
                     }
@@ -245,10 +235,13 @@ namespace KCoach
             return true;
         }
 
-        private JointType[] match(IReadOnlyDictionary<JointType, int> template, IReadOnlyDictionary<JointType, int> action)
+        private JointType[] match(IDictionary<JointType, int> template, IReadOnlyDictionary<JointType, int> action)
         {
             var unmatchTypes = new List<JointType>();
-            var delta = 5;
+            var delta = 10;
+
+            if (template == null || action == null)
+                return unmatchTypes.ToArray();
 
 
             foreach (var kv in template)
