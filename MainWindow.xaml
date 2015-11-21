@@ -48,8 +48,8 @@
                             </ItemsControl.ItemsPanel>
                         </ItemsControl>
                     </ScrollViewer>
-                    <Image Name="camera" />
-                    <Canvas Name="canvas" />
+                    <Image Name="camera" Visibility="Hidden"/>
+                    <Canvas Name="canvas" Visibility="Hidden"/>
                 </Grid>
             </ContentControl>
             
