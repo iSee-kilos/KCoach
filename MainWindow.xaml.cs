@@ -19,6 +19,11 @@ namespace KCoach
         private KinectSensor sensor;
         private MultiSourceFrameReader _reader;
         private IList<Body> bodies;
+        private IList<Body> oldBodies;
+
+        private int steadyCounter;
+
+        private static int IS_STEADY = 72;
 
 
 
@@ -101,20 +106,22 @@ namespace KCoach
                 {
                     canvas.Children.Clear();
                     // canvas.UpdateLayout();
+                    if (bodies != null && bodies.Count != 0)
+                    {
+                        oldBodies = bodies;
+                    }
 
                     bodies = new Body[frame.BodyFrameSource.BodyCount];
 
                     frame.GetAndRefreshBodyData(bodies);
-                    foreach (var body in bodies)
+                    var body = bodies[0];
+                    if (body != null)
                     {
-                        if (body != null)
+                        if (body.IsTracked)
                         {
-                            if (body.IsTracked)
-                            {
-                                // Draw skeleton.
+                            // Draw skeleton.
 
-                                canvas.DrawSkeleton(body, sensor);
-                            }
+                            canvas.DrawSkeleton(body, sensor);
                         }
                     }
                 }
@@ -131,6 +138,10 @@ namespace KCoach
             }
         }
 
+        private Boolean isSteady(Body oldBody, Body newBody)
+        {
+            return false;
+        }
        
         
     }
