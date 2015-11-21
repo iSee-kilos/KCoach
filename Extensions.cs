@@ -137,12 +137,10 @@ namespace KCoach
 
             // ankle
             int ankleLeftAngle = GetAngle(body.Joints[JointType.AnkleLeft], body.Joints[JointType.FootLeft], body.Joints[JointType.KneeLeft]);
-            Point leftAnkle = scalePoint(body.Joints[JointType.AnkleLeft].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
-            WirteText(canvas, leftAnkle, ankleLeftAngle.ToString());
+            res[JointType.AnkleLeft] = ankleLeftAngle;
 
             int ankleRightAngle = GetAngle(body.Joints[JointType.AnkleRight], body.Joints[JointType.FootRight], body.Joints[JointType.KneeRight]);
-            Point rightAnkle = scalePoint(body.Joints[JointType.AnkleRight].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
-            WirteText(canvas, rightAnkle, ankleRightAngle.ToString());
+            res[JointType.AnkleRight] = ankleRightAngle;
 
             // spine
             //double spineAngle = GetAngle(body.Joints[JointType.SpineMid], body.Joints[JointType.SpineBase], body.Joints[JointType.SpineShoulder]);
@@ -153,22 +151,18 @@ namespace KCoach
             int hipLeftAngle = GetAngle(body.Joints[JointType.SpineBase], body.Joints[JointType.SpineMid], body.Joints[JointType.KneeLeft]);
             int hipRightAngle = GetAngle(body.Joints[JointType.SpineBase], body.Joints[JointType.SpineMid], body.Joints[JointType.KneeRight]);
             int hipAngle = Math.Max(hipLeftAngle, hipRightAngle);
-            Point hip = scalePoint(body.Joints[JointType.SpineBase].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
-            WirteText(canvas, hip, hipAngle.ToString());
+            res[JointType.SpineBase] = hipAngle;
 
             // elbow
             int elbowLeftAngle = GetAngle(body.Joints[JointType.ElbowLeft], body.Joints[JointType.ShoulderLeft], body.Joints[JointType.WristLeft]);
-            Point leftElbow = scalePoint(body.Joints[JointType.ElbowLeft].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
-            WirteText(canvas, leftElbow, elbowLeftAngle.ToString());
+            res[JointType.ElbowLeft] = elbowLeftAngle;
 
             int elbowRightAngle = GetAngle(body.Joints[JointType.ElbowRight], body.Joints[JointType.ShoulderRight], body.Joints[JointType.WristRight]);
-            Point rightElbow = scalePoint(body.Joints[JointType.ElbowRight].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
-            WirteText(canvas, rightElbow, elbowRightAngle.ToString());
+            res[JointType.ElbowRight] = elbowRightAngle;
 
             // neck
-            double neckAngle = GetAngle(body.Joints[JointType.Neck], body.Joints[JointType.SpineShoulder], body.Joints[JointType.Head]);
-            Point neck = scalePoint(body.Joints[JointType.Neck].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
-            WirteText(canvas, neck, neckAngle.ToString());
+            int neckAngle = GetAngle(body.Joints[JointType.Neck], body.Joints[JointType.SpineShoulder], body.Joints[JointType.Head]);
+            res[JointType.Neck] = neckAngle;
 
             return res;
         }
@@ -252,50 +246,13 @@ namespace KCoach
             canvas.DrawBone(body.Joints[JointType.AnkleLeft], body.Joints[JointType.FootLeft], senser);
             canvas.DrawBone(body.Joints[JointType.AnkleRight], body.Joints[JointType.FootRight], senser);
 
-            // write angle
-            // knee
-            int kneeLeftAngle = GetAngle(body.Joints[JointType.KneeLeft], body.Joints[JointType.HipLeft], body.Joints[JointType.AnkleLeft]);
-            Point leftKnee = scalePoint(body.Joints[JointType.KneeLeft].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
-            WirteText(canvas, leftKnee, kneeLeftAngle.ToString());
-
-            int kneeRightAngle = GetAngle(body.Joints[JointType.KneeRight], body.Joints[JointType.HipRight], body.Joints[JointType.AnkleRight]);
-            Point rightKnee = scalePoint(body.Joints[JointType.KneeRight].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
-            WirteText(canvas, rightKnee, kneeRightAngle.ToString());
-
-            // ankle
-            int ankleLeftAngle = GetAngle(body.Joints[JointType.AnkleLeft], body.Joints[JointType.FootLeft], body.Joints[JointType.KneeLeft]);
-            Point leftAnkle = scalePoint(body.Joints[JointType.AnkleLeft].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
-            WirteText(canvas, leftAnkle, ankleLeftAngle.ToString());
-
-            int ankleRightAngle = GetAngle(body.Joints[JointType.AnkleRight], body.Joints[JointType.FootRight], body.Joints[JointType.KneeRight]);
-            Point rightAnkle = scalePoint(body.Joints[JointType.AnkleRight].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
-            WirteText(canvas, rightAnkle, ankleRightAngle.ToString());
-
-            // spine
-            //double spineAngle = GetAngle(body.Joints[JointType.SpineMid], body.Joints[JointType.SpineBase], body.Joints[JointType.SpineShoulder]);
-            //Point spine = scalePoint(body.Joints[JointType.SpineMid].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
-            //WirteText(canvas, spine, spineAngle.ToString());
-
-            // hip
-            int hipLeftAngle = GetAngle(body.Joints[JointType.SpineBase], body.Joints[JointType.SpineMid], body.Joints[JointType.KneeLeft]);
-            int hipRightAngle = GetAngle(body.Joints[JointType.SpineBase], body.Joints[JointType.SpineMid], body.Joints[JointType.KneeRight]);
-            int hipAngle = Math.Max(hipLeftAngle, hipRightAngle);
-            Point hip = scalePoint(body.Joints[JointType.SpineBase].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
-            WirteText(canvas, hip, hipAngle.ToString());
-
-            // elbow
-            int elbowLeftAngle = GetAngle(body.Joints[JointType.ElbowLeft], body.Joints[JointType.ShoulderLeft], body.Joints[JointType.WristLeft]);
-            Point leftElbow = scalePoint(body.Joints[JointType.ElbowLeft].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
-            WirteText(canvas, leftElbow, elbowLeftAngle.ToString());
-
-            int elbowRightAngle = GetAngle(body.Joints[JointType.ElbowRight], body.Joints[JointType.ShoulderRight], body.Joints[JointType.WristRight]);
-            Point rightElbow = scalePoint(body.Joints[JointType.ElbowRight].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
-            WirteText(canvas, rightElbow, elbowRightAngle.ToString());
-
-            // neck
-            double neckAngle = GetAngle(body.Joints[JointType.Neck], body.Joints[JointType.SpineShoulder], body.Joints[JointType.Head]);
-            Point neck = scalePoint(body.Joints[JointType.Neck].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
-            WirteText(canvas, neck, neckAngle.ToString());
+            IReadOnlyDictionary<JointType, int> res = GetJointAngles(body);
+            foreach (var kv in res)
+            {
+                Point p = scalePoint(body.Joints[kv.Key].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
+                WirteText(canvas, p, kv.Value.ToString());
+            }
+            
         }
 
         public static void DrawJoint(this Canvas canvas, Joint joint, KinectSensor sensor)
