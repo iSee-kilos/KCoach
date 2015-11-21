@@ -21,10 +21,20 @@ namespace KCoach
         private IList<Body> bodies;
         private IList<Body> oldBodies;
 
-        private int steadyCounter;
+        private static int steadyCounter;
 
-        private static int IS_STEADY = 72;
+        private static int IS_STEADY = 30;
 
+        private static Dictionary<JointType, int> squat;
+
+        private void setSquat()
+        {
+            squat = new Dictionary<JointType, int>();
+            squat[JointType.KneeLeft] = 180;
+            squat[JointType.KneeRight] = 180;
+            squat[JointType.SpineBase] = 180;
+            squat[JointType.SpineMid] = 180;
+        }
 
 
         /// <summary>
@@ -73,6 +83,8 @@ namespace KCoach
             this.bones.Add(new Tuple<JointType, JointType>(JointType.KneeLeft, JointType.AnkleLeft));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.AnkleLeft, JointType.FootLeft));
 
+            setSquat();
+
 
             this.sensor = KinectSensor.GetDefault();
             if (sensor != null)
@@ -112,10 +124,20 @@ namespace KCoach
                         steadyCounter++;
                         if (steadyCounter > IS_STEADY)
                             steadyFlag = true;
+
+                        Point p = new Point();
+                        p.X = canvas.ActualWidth / 2;
+                        p.Y = canvas.ActualHeight / 2;
+                        canvas.WirteText(p, "steady");
                     }
                     else
                     {
-                        steadyCounter--;
+                        steadyCounter = 0;
+                        steadyFlag = false;
+                        Point p = new Point();
+                        p.X = canvas.ActualWidth / 2;
+                        p.Y = canvas.ActualHeight / 2;
+                        canvas.WirteText(p, "not steady");
                     }
                     if (bodies != null)
                     {
@@ -132,15 +154,18 @@ namespace KCoach
                             if (body.IsTracked)
                             {
                                 // Draw skeleton.
-
+                                var angles = body.GetJointAngles();
+                                var wrongJoints = match(squat, angles);
                                 canvas.DrawSkeleton(body, sensor, steadyFlag);
+                                if (steadyFlag)
+                                    canvas.DrawWrongJoints(body, wrongJoints, sensor);
                             }
                         }
                     }
                 }
-                    
+
             }
-                
+
 
             using (var frame = reference.ColorFrameReference.AcquireFrame())
             {
@@ -151,12 +176,75 @@ namespace KCoach
             }
         }
 
-        private static Boolean isSteady()
+        private bool isSteady()
         {
-            return false;
-        } 
+            if (oldBodies == null || bodies == null)
+                return false;
 
-       
-        
+            var body_len = oldBodies.Count;
+            double delta = 0.05;
+            if (bodies.Count < body_len)
+            {
+                body_len = bodies.Count;
+            }
+            for (var i = 0; i < body_len; i++)
+            {
+                
+                Body ob = oldBodies[i];
+                Body nb = bodies[i];
+                if (ob == null || nb == null)
+                    continue;
+                foreach (var key in ob.Joints.Keys)
+                {
+                    var oj = ob.Joints[key];
+                    var nj = nb.Joints[key];
+                    if (oj.JointType == JointType.WristLeft || oj.JointType == JointType.WristRight ||
+                        oj.JointType == JointType.HandLeft || oj.JointType == JointType.HandRight ||
+                        oj.JointType == JointType.HandTipLeft || oj.JointType == JointType.HandTipRight ||
+                        oj.JointType == JointType.AnkleLeft || oj.JointType == JointType.AnkleRight ||
+                        oj.JointType == JointType.FootLeft || oj.JointType == JointType.FootRight)
+                    {
+                        continue;
+                    }
+
+                    if ((nj.Position.X >= oj.Position.X - delta && nj.Position.X <= oj.Position.X + delta) ||
+                        (nj.Position.Y >= oj.Position.Y - delta && nj.Position.Y <= oj.Position.Y + delta) ||
+                        (nj.Position.Z >= oj.Position.Z - delta && nj.Position.Z <= oj.Position.Z + delta))
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        private JointType[] match(IReadOnlyDictionary<JointType, int> template, IReadOnlyDictionary<JointType, int> action)
+        {
+            var unmatchTypes = new List<JointType>();
+            var delta = 5;
+
+
+            foreach (var kv in template)
+            {
+                var userAngle = action[kv.Key];
+                var targetAngle = template[kv.Key];
+                if (userAngle > targetAngle - delta && userAngle < targetAngle + delta)
+                {
+                    continue;
+                }
+                else
+                {
+                    unmatchTypes.Add(kv.Key);
+                }
+                
+            }
+            return unmatchTypes.ToArray();
+        }
+
     }
 }

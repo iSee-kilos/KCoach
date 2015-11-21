@@ -129,17 +129,17 @@ namespace KCoach
             // knee
             Dictionary<JointType, int> res = new Dictionary<JointType, int>();
 
-            int kneeLeftAngle = GetAngle(body.Joints[JointType.KneeLeft], body.Joints[JointType.HipLeft], body.Joints[JointType.AnkleLeft]);
+            int kneeLeftAngle = GetAngle(body.Joints[JointType.KneeLeft], body.Joints[JointType.HipLeft], body.Joints[JointType.KneeLeft], body.Joints[JointType.AnkleLeft]);
             res[JointType.KneeLeft] = kneeLeftAngle;
 
-            int kneeRightAngle = GetAngle(body.Joints[JointType.KneeRight], body.Joints[JointType.HipRight], body.Joints[JointType.AnkleRight]);
+            int kneeRightAngle = GetAngle(body.Joints[JointType.KneeRight], body.Joints[JointType.HipRight], body.Joints[JointType.KneeRight], body.Joints[JointType.AnkleRight]);
             res[JointType.KneeRight] = kneeRightAngle;
 
             // ankle
-            int ankleLeftAngle = GetAngle(body.Joints[JointType.AnkleLeft], body.Joints[JointType.FootLeft], body.Joints[JointType.KneeLeft]);
+            int ankleLeftAngle = GetAngle(body.Joints[JointType.AnkleLeft], body.Joints[JointType.FootLeft], body.Joints[JointType.AnkleLeft], body.Joints[JointType.KneeLeft]);
             res[JointType.AnkleLeft] = ankleLeftAngle;
 
-            int ankleRightAngle = GetAngle(body.Joints[JointType.AnkleRight], body.Joints[JointType.FootRight], body.Joints[JointType.KneeRight]);
+            int ankleRightAngle = GetAngle(body.Joints[JointType.AnkleRight], body.Joints[JointType.FootRight], body.Joints[JointType.AnkleRight], body.Joints[JointType.KneeRight]);
             res[JointType.AnkleRight] = ankleRightAngle;
 
             // spine
@@ -148,21 +148,25 @@ namespace KCoach
             //WirteText(canvas, spine, spineAngle.ToString());
 
             // hip
-            int hipLeftAngle = GetAngle(body.Joints[JointType.SpineBase], body.Joints[JointType.SpineMid], body.Joints[JointType.KneeLeft]);
-            int hipRightAngle = GetAngle(body.Joints[JointType.SpineBase], body.Joints[JointType.SpineMid], body.Joints[JointType.KneeRight]);
+            int hipLeftAngle = GetAngle(body.Joints[JointType.SpineBase], body.Joints[JointType.SpineMid], body.Joints[JointType.HipLeft], body.Joints[JointType.KneeLeft]);
+            int hipRightAngle = GetAngle(body.Joints[JointType.SpineBase], body.Joints[JointType.SpineMid], body.Joints[JointType.HipRight], body.Joints[JointType.KneeRight]);
             int hipAngle = Math.Max(hipLeftAngle, hipRightAngle);
-            res[JointType.SpineBase] = hipAngle;
+            res[JointType.SpineMid] = hipAngle;
 
             // elbow
-            int elbowLeftAngle = GetAngle(body.Joints[JointType.ElbowLeft], body.Joints[JointType.ShoulderLeft], body.Joints[JointType.WristLeft]);
+            int elbowLeftAngle = GetAngle(body.Joints[JointType.ElbowLeft], body.Joints[JointType.ShoulderLeft], body.Joints[JointType.ElbowLeft], body.Joints[JointType.WristLeft]);
             res[JointType.ElbowLeft] = elbowLeftAngle;
 
-            int elbowRightAngle = GetAngle(body.Joints[JointType.ElbowRight], body.Joints[JointType.ShoulderRight], body.Joints[JointType.WristRight]);
+            int elbowRightAngle = GetAngle(body.Joints[JointType.ElbowRight], body.Joints[JointType.ShoulderRight], body.Joints[JointType.ElbowRight], body.Joints[JointType.WristRight]);
             res[JointType.ElbowRight] = elbowRightAngle;
 
             // neck
-            int neckAngle = GetAngle(body.Joints[JointType.Neck], body.Joints[JointType.SpineShoulder], body.Joints[JointType.Head]);
+            int neckAngle = GetAngle(body.Joints[JointType.Neck], body.Joints[JointType.SpineShoulder], body.Joints[JointType.Neck], body.Joints[JointType.Head]);
             res[JointType.Neck] = neckAngle;
+
+            // legs
+            int legsAngle = GetAngle(body.Joints[JointType.KneeLeft], body.Joints[JointType.HipLeft], body.Joints[JointType.KneeRight], body.Joints[JointType.HipRight]);
+            res[JointType.SpineBase] = legsAngle;
 
             return res;
         }
@@ -212,6 +216,13 @@ namespace KCoach
 
         private static Boolean steadyFlag;
 
+        public static void DrawWrongJoints(this Canvas canvas, Body body, JointType[] joints, KinectSensor sensor)
+        {
+            foreach (JointType jointType in joints)
+            {
+                canvas.DrawWrongJoint(body.Joints[jointType], sensor);
+            }
+        }
         public static void DrawSkeleton(this Canvas canvas, Body body, KinectSensor senser, Boolean isSteady)
         {
             if (body == null) return;
@@ -260,9 +271,9 @@ namespace KCoach
             if (joint.TrackingState == TrackingState.NotTracked) return;
             Color c;
             if (steadyFlag)
-                c = Colors.DarkBlue;
+                c = Colors.CadetBlue;
             else
-                c = Colors.Red;
+                c = Colors.SandyBrown;
             Boolean inferred = false;
             if (joint.TrackingState == TrackingState.Inferred)
             {
@@ -278,6 +289,38 @@ namespace KCoach
             DrawPoint(canvas, p, c, inferred);
         }
 
+        private static void DrawWrongJoint(this Canvas canvas, Joint joint, KinectSensor sensor)
+        {
+            if (joint.TrackingState == TrackingState.NotTracked) return;
+            Color c = Colors.Red;
+            
+            double alpha = 1.0;
+            if (joint.TrackingState == TrackingState.Inferred)
+            {
+                alpha = 0.75;
+            }
+
+
+            // joint = joint.ScaleTo(canvas.ActualWidth, canvas.ActualHeight);
+            Point p = scalePoint(joint.Project(sensor), canvas.ActualWidth, canvas.ActualHeight);
+            if (!inCanvas(canvas, p))
+                return;
+
+            SolidColorBrush fill = new SolidColorBrush(c);
+            fill.Opacity = alpha;
+            Ellipse ellipse = new Ellipse
+            {
+                Width = 20,
+                Height = 20,
+                Fill = fill
+            };
+
+            Canvas.SetLeft(ellipse, p.X - ellipse.Width / 2);
+            Canvas.SetTop(ellipse, p.Y - ellipse.Height / 2);
+
+            canvas.Children.Add(ellipse);
+        }
+
 
         public static void DrawBone(this Canvas canvas, Joint first, Joint second, KinectSensor sensor)
         {
@@ -288,7 +331,7 @@ namespace KCoach
 
             Color c;
             if (steadyFlag)
-                c = Colors.Green;
+                c = Colors.LightSeaGreen;
             else
                 c = Colors.Yellow;
             Boolean inferred = false;
@@ -366,14 +409,14 @@ namespace KCoach
             canvas.Children.Add(textBlock); // Add to Canvas
         }
 
-        private static int GetAngle(Joint center, Joint a, Joint b)
+        private static int GetAngle(Joint ax, Joint ay, Joint bx, Joint by)
         {
-            double xa = a.Position.X - center.Position.X;
-            double ya = a.Position.Y - center.Position.Y;
-            double za = a.Position.Z - center.Position.Z;
-            double xb = b.Position.X - center.Position.X;
-            double yb = b.Position.Y - center.Position.Y;
-            double zb = b.Position.Z - center.Position.Z;
+            double xa = ay.Position.X - ax.Position.X;
+            double ya = ay.Position.Y - ax.Position.Y;
+            double za = ay.Position.Z - ax.Position.Z;
+            double xb = by.Position.X - bx.Position.X;
+            double yb = by.Position.Y - bx.Position.Y;
+            double zb = by.Position.Z - bx.Position.Z;
             double ans = xa * xb + ya * yb + za * zb;
             double lengtha = Math.Pow(xa, 2) + Math.Pow(ya, 2) + Math.Pow(za, 2);
             lengtha = Math.Pow(lengtha, 0.5);
