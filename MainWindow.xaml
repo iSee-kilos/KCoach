@@ -30,7 +30,9 @@
                 </Grid.ColumnDefinitions>
 
                 <Button x:Name="backButton" Visibility="Hidden" Grid.Column="0" Style="{StaticResource BackButtonStyle}" Click="GoBack" />
-                <Image Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Source="Images\Logo.png" Stretch="None" Margin="0 0 0 4"/>
+                <Image Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" Source="Images\kcoach_logo.png" Stretch="Fill" Margin="0 0 0 4" Width="400"/>
+                <Image Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center"  Source="Images\Logo.png" Stretch="None" Margin="0 0 36 4"/>
+                <TextBlock x:Name="textBlock" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0 130 0 0" TextWrapping="Wrap" Text="Select An Action:" Grid.ColumnSpan="2" FontSize="30" FontWeight="Bold"/>
             </Grid>
 
             <ContentControl Grid.Row="1" x:Name="navigationRegion">
@@ -40,7 +42,7 @@
                                   HorizontalAlignment="Stretch"
                                   VerticalScrollBarVisibility="Disabled" 
                                   k:KinectRegion.IsScrollInertiaEnabled="true" >
-                        <ItemsControl Grid.Row="0" Name="itemsControl" ItemTemplate="{StaticResource Kinect250x250ItemTemplate}" Button.Click="ButtonClick">
+                        <ItemsControl Grid.Row="0" Name="itemsControl" ItemTemplate="{StaticResource Kinect300x300ItemTemplate}" Button.Click="ButtonClick">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <WrapPanel VerticalAlignment="Center" Orientation="Vertical" Margin="75,0,75,0" />
@@ -52,10 +54,7 @@
                     <Canvas Name="canvas" Visibility="Hidden"/>
                 </Grid>
             </ContentControl>
-            
-            <Grid>
-                
-            </Grid>
+            <Canvas Name="pointerCanvas"></Canvas>
         </Grid>
     </k:KinectRegion>
 </Window>

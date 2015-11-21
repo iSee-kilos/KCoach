@@ -85,9 +85,9 @@
         </Setter>
     </Style>
 
-    <DataTemplate x:Key="Kinect250x250ItemTemplate">
+    <DataTemplate x:Key="Kinect300x300ItemTemplate">
         <Button Margin="3" Style="{StaticResource KinectTileButton}">
-            <Grid HorizontalAlignment="Left" Width="250" Height="250">
+            <Grid HorizontalAlignment="Left" Width="300" Height="300">
                 <Border Background="{StaticResource ListViewItemPlaceholderBackgroundThemeBrush}">
                     <Image Source="{Binding Image}" Stretch="UniformToFill" AutomationProperties.Name="{Binding Title}"/>
                 </Border>
@@ -1152,7 +1152,7 @@
         <Setter Property="MinHeight" Value="48"/>
         <Setter Property="Padding" Value="36,36,36,36" />
         <Setter Property="k:KinectRegion.KinectPressInset" Value="36,36,36,36" />
-        <Setter Property="VerticalAlignment" Value="Bottom"/>        
+        <Setter Property="VerticalAlignment" Value="Center"/>        
         <Setter Property="FontWeight" Value="Normal"/>        
         <Setter Property="AutomationProperties.AutomationId" Value="BackButton"/>
         <Setter Property="AutomationProperties.Name" Value="Back"/>

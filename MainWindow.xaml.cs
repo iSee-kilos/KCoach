@@ -7,6 +7,9 @@ using System.Windows.Media.Imaging;
 using System;
 using System.Windows.Shapes;
 using System.Windows.Controls;
+using Microsoft.Kinect.Wpf.Controls;
+using Microsoft.Samples.Kinect.DepthBasics;
+using Microsoft.Kinect.Input;
 
 namespace KCoach
 {
@@ -89,8 +92,19 @@ namespace KCoach
 
             setSquat();
 
+            InitializeComponent();
 
-            this.sensor = KinectSensor.GetDefault();
+            this.Loaded += MainWindow_Loaded;
+
+            KinectRegion.SetKinectRegion(this, kinectRegion);
+
+            App app = ((App)Application.Current);
+            app.KinectRegion = kinectRegion;
+
+            // Use the default sensor
+            this.kinectRegion.KinectSensor = KinectSensor.GetDefault();
+
+            this.sensor = this.kinectRegion.KinectSensor;
             if (sensor != null)
             {
                 sensor.Open();
@@ -99,10 +113,13 @@ namespace KCoach
             _reader = sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Color | FrameSourceTypes.Body);
             _reader.MultiSourceFrameArrived += ReaderMultiSourceFrameArrived;
 
-
-            InitializeComponent();
-
             this.itemsControl.ItemsSource = StaticActionDatabase.Instance.Actions;
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            KinectCoreWindow kinectCoreWindow = KinectCoreWindow.GetForCurrentThread();
+            kinectCoreWindow.PointerMoved += kinectCoreWindow_PointerMoved;
         }
 
         private void ReaderMultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
@@ -255,20 +272,42 @@ namespace KCoach
         {
             this.inMatch = false;
             this.currentAction = null;
-            backButton.Visibility = System.Windows.Visibility.Hidden;
-            canvas.Visibility = Visibility.Hidden;
-            camera.Visibility = Visibility.Hidden;
-            scrollViewer.Visibility = Visibility.Visible;
+            SwitchButtons();
         }
 
         private void ButtonClick(object sender, RoutedEventArgs e)
         {
             this.inMatch = true;
             this.currentAction = ((Button)e.OriginalSource).DataContext as Action;
-            camera.Visibility = Visibility.Visible;
-            canvas.Visibility = Visibility.Visible;
-            backButton.Visibility = Visibility.Visible;
-            scrollViewer.Visibility = Visibility.Hidden;
+            SwitchButtons();
+        }
+
+        private void SwitchButtons()
+        {
+            backButton.Visibility = this.inMatch ? Visibility.Visible : System.Windows.Visibility.Hidden;
+            canvas.Visibility = this.inMatch ? Visibility.Visible : Visibility.Hidden;
+            camera.Visibility = this.inMatch ? Visibility.Visible : Visibility.Hidden;
+            scrollViewer.Visibility = this.inMatch ? Visibility.Hidden : Visibility.Visible;
+            textBlock.Visibility = this.inMatch ? Visibility.Hidden : Visibility.Visible;
+        }
+
+
+
+        private const double DotHeight = 60;
+        private const double DotWidth = 60;
+        private SolidColorBrush blackBrush = Brushes.Black;
+        private SolidColorBrush greenBrush = Brushes.Green;
+        private SolidColorBrush yellowBrush = Brushes.Yellow;
+        private TimeSpan lastTime;
+
+        private void kinectCoreWindow_PointerMoved(object sender, KinectPointerEventArgs args)
+        {
+            KinectPointerPoint kinectPointerPoint = args.CurrentPoint;
+            if (lastTime == TimeSpan.Zero || lastTime != kinectPointerPoint.Properties.BodyTimeCounter)
+            {
+                lastTime = kinectPointerPoint.Properties.BodyTimeCounter;
+                pointerCanvas.Children.Clear();
+            }
         }
 
     }
