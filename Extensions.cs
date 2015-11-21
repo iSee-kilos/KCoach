@@ -199,6 +199,51 @@ namespace KCoach
             canvas.DrawBone(body.Joints[JointType.KneeRight], body.Joints[JointType.AnkleRight], senser);
             canvas.DrawBone(body.Joints[JointType.AnkleLeft], body.Joints[JointType.FootLeft], senser);
             canvas.DrawBone(body.Joints[JointType.AnkleRight], body.Joints[JointType.FootRight], senser);
+
+            // write angle
+            // knee
+            int kneeLeftAngle = GetAngle(body.Joints[JointType.KneeLeft], body.Joints[JointType.HipLeft], body.Joints[JointType.AnkleLeft]);
+            Point leftKnee = scalePoint(body.Joints[JointType.KneeLeft].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
+            WirteText(canvas, leftKnee, kneeLeftAngle.ToString());
+
+            int kneeRightAngle = GetAngle(body.Joints[JointType.KneeRight], body.Joints[JointType.HipRight], body.Joints[JointType.AnkleRight]);
+            Point rightKnee = scalePoint(body.Joints[JointType.KneeRight].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
+            WirteText(canvas, rightKnee, kneeRightAngle.ToString());
+
+            // ankle
+            int ankleLeftAngle = GetAngle(body.Joints[JointType.AnkleLeft], body.Joints[JointType.FootLeft], body.Joints[JointType.KneeLeft]);
+            Point leftAnkle = scalePoint(body.Joints[JointType.AnkleLeft].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
+            WirteText(canvas, leftAnkle, ankleLeftAngle.ToString());
+
+            int ankleRightAngle = GetAngle(body.Joints[JointType.AnkleRight], body.Joints[JointType.FootRight], body.Joints[JointType.KneeRight]);
+            Point rightAnkle = scalePoint(body.Joints[JointType.AnkleRight].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
+            WirteText(canvas, rightAnkle, ankleRightAngle.ToString());
+
+            // spine
+            //double spineAngle = GetAngle(body.Joints[JointType.SpineMid], body.Joints[JointType.SpineBase], body.Joints[JointType.SpineShoulder]);
+            //Point spine = scalePoint(body.Joints[JointType.SpineMid].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
+            //WirteText(canvas, spine, spineAngle.ToString());
+
+            // hip
+            int hipLeftAngle = GetAngle(body.Joints[JointType.SpineBase], body.Joints[JointType.SpineMid], body.Joints[JointType.KneeLeft]);
+            int hipRightAngle = GetAngle(body.Joints[JointType.SpineBase], body.Joints[JointType.SpineMid], body.Joints[JointType.KneeRight]);
+            int hipAngle = Math.Max(hipLeftAngle, hipRightAngle);
+            Point hip = scalePoint(body.Joints[JointType.SpineBase].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
+            WirteText(canvas, hip, hipAngle.ToString());
+
+            // elbow
+            int elbowLeftAngle = GetAngle(body.Joints[JointType.ElbowLeft], body.Joints[JointType.ShoulderLeft], body.Joints[JointType.WristLeft]);
+            Point leftElbow = scalePoint(body.Joints[JointType.ElbowLeft].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
+            WirteText(canvas, leftElbow, elbowLeftAngle.ToString());
+
+            int elbowRightAngle = GetAngle(body.Joints[JointType.ElbowRight], body.Joints[JointType.ShoulderRight], body.Joints[JointType.WristRight]);
+            Point rightElbow = scalePoint(body.Joints[JointType.ElbowRight].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
+            WirteText(canvas, rightElbow, elbowRightAngle.ToString());
+
+            // neck
+            double neckAngle = GetAngle(body.Joints[JointType.Neck], body.Joints[JointType.SpineShoulder], body.Joints[JointType.Head]);
+            Point neck = scalePoint(body.Joints[JointType.Neck].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
+            WirteText(canvas, neck, neckAngle.ToString());
         }
 
         public static void DrawJoint(this Canvas canvas, Joint joint, KinectSensor sensor)
@@ -294,8 +339,27 @@ namespace KCoach
             Canvas.SetLeft(textBlock, p.X);
             Canvas.SetTop(textBlock, p.Y);
             textBlock.Text = text;
+            SolidColorBrush fill = new SolidColorBrush(Colors.White);
+            textBlock.Foreground = fill;
 
             canvas.Children.Add(textBlock); // Add to Canvas
+        }
+
+        private static int GetAngle(Joint center, Joint a, Joint b)
+        {
+            double xa = a.Position.X - center.Position.X;
+            double ya = a.Position.Y - center.Position.Y;
+            double za = a.Position.Z - center.Position.Z;
+            double xb = b.Position.X - center.Position.X;
+            double yb = b.Position.Y - center.Position.Y;
+            double zb = b.Position.Z - center.Position.Z;
+            double ans = xa * xb + ya * yb + za * zb;
+            double lengtha = Math.Pow(xa, 2) + Math.Pow(ya, 2) + Math.Pow(za, 2);
+            lengtha = Math.Pow(lengtha, 0.5);
+            double lengthb = Math.Pow(xb, 2) + Math.Pow(yb, 2) + Math.Pow(zb, 2);
+            lengthb = Math.Pow(lengthb, 0.5);
+            double angle = Math.Acos(ans / (lengtha * lengthb)) / Math.PI * 180;
+            return Convert.ToInt32(angle);
         }
         #endregion
     }
