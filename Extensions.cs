@@ -99,6 +99,8 @@ namespace KCoach
             return BitmapSource.Create(width, height, 96, 96, format, null, pixels, stride);
         }
 
+        
+
         #endregion
 
         #region Body
@@ -144,76 +146,115 @@ namespace KCoach
         public static void DrawSkeleton(this Canvas canvas, Body body)
         {
             if (body == null) return;
-
+           
             foreach (Joint joint in body.Joints.Values)
             {
-                canvas.DrawPoint(joint);
+                DrawJoint(canvas, joint);
             }
 
-            canvas.DrawLine(body.Joints[JointType.Head], body.Joints[JointType.Neck]);
-            canvas.DrawLine(body.Joints[JointType.Neck], body.Joints[JointType.SpineShoulder]);
-            canvas.DrawLine(body.Joints[JointType.SpineShoulder], body.Joints[JointType.ShoulderLeft]);
-            canvas.DrawLine(body.Joints[JointType.SpineShoulder], body.Joints[JointType.ShoulderRight]);
-            canvas.DrawLine(body.Joints[JointType.SpineShoulder], body.Joints[JointType.SpineMid]);
-            canvas.DrawLine(body.Joints[JointType.ShoulderLeft], body.Joints[JointType.ElbowLeft]);
-            canvas.DrawLine(body.Joints[JointType.ShoulderRight], body.Joints[JointType.ElbowRight]);
-            canvas.DrawLine(body.Joints[JointType.ElbowLeft], body.Joints[JointType.WristLeft]);
-            canvas.DrawLine(body.Joints[JointType.ElbowRight], body.Joints[JointType.WristRight]);
-            canvas.DrawLine(body.Joints[JointType.WristLeft], body.Joints[JointType.HandLeft]);
-            canvas.DrawLine(body.Joints[JointType.WristRight], body.Joints[JointType.HandRight]);
-            canvas.DrawLine(body.Joints[JointType.HandLeft], body.Joints[JointType.HandTipLeft]);
-            canvas.DrawLine(body.Joints[JointType.HandRight], body.Joints[JointType.HandTipRight]);
-            canvas.DrawLine(body.Joints[JointType.HandTipLeft], body.Joints[JointType.ThumbLeft]);
-            canvas.DrawLine(body.Joints[JointType.HandTipRight], body.Joints[JointType.ThumbRight]);
-            canvas.DrawLine(body.Joints[JointType.SpineMid], body.Joints[JointType.SpineBase]);
-            canvas.DrawLine(body.Joints[JointType.SpineBase], body.Joints[JointType.HipLeft]);
-            canvas.DrawLine(body.Joints[JointType.SpineBase], body.Joints[JointType.HipRight]);
-            canvas.DrawLine(body.Joints[JointType.HipLeft], body.Joints[JointType.KneeLeft]);
-            canvas.DrawLine(body.Joints[JointType.HipRight], body.Joints[JointType.KneeRight]);
-            canvas.DrawLine(body.Joints[JointType.KneeLeft], body.Joints[JointType.AnkleLeft]);
-            canvas.DrawLine(body.Joints[JointType.KneeRight], body.Joints[JointType.AnkleRight]);
-            canvas.DrawLine(body.Joints[JointType.AnkleLeft], body.Joints[JointType.FootLeft]);
-            canvas.DrawLine(body.Joints[JointType.AnkleRight], body.Joints[JointType.FootRight]);
+            canvas.DrawBone(body.Joints[JointType.Head], body.Joints[JointType.Neck]);
+            canvas.DrawBone(body.Joints[JointType.Neck], body.Joints[JointType.SpineShoulder]);
+            canvas.DrawBone(body.Joints[JointType.SpineShoulder], body.Joints[JointType.ShoulderLeft]);
+            canvas.DrawBone(body.Joints[JointType.SpineShoulder], body.Joints[JointType.ShoulderRight]);
+            canvas.DrawBone(body.Joints[JointType.SpineShoulder], body.Joints[JointType.SpineMid]);
+            canvas.DrawBone(body.Joints[JointType.ShoulderLeft], body.Joints[JointType.ElbowLeft]);
+            canvas.DrawBone(body.Joints[JointType.ShoulderRight], body.Joints[JointType.ElbowRight]);
+            canvas.DrawBone(body.Joints[JointType.ElbowLeft], body.Joints[JointType.WristLeft]);
+            canvas.DrawBone(body.Joints[JointType.ElbowRight], body.Joints[JointType.WristRight]);
+            canvas.DrawBone(body.Joints[JointType.WristLeft], body.Joints[JointType.HandLeft]);
+            canvas.DrawBone(body.Joints[JointType.WristRight], body.Joints[JointType.HandRight]);
+            canvas.DrawBone(body.Joints[JointType.HandLeft], body.Joints[JointType.HandTipLeft]);
+            canvas.DrawBone(body.Joints[JointType.HandRight], body.Joints[JointType.HandTipRight]);
+            canvas.DrawBone(body.Joints[JointType.HandTipLeft], body.Joints[JointType.ThumbLeft]);
+            canvas.DrawBone(body.Joints[JointType.HandTipRight], body.Joints[JointType.ThumbRight]);
+            canvas.DrawBone(body.Joints[JointType.SpineMid], body.Joints[JointType.SpineBase]);
+            canvas.DrawBone(body.Joints[JointType.SpineBase], body.Joints[JointType.HipLeft]);
+            canvas.DrawBone(body.Joints[JointType.SpineBase], body.Joints[JointType.HipRight]);
+            canvas.DrawBone(body.Joints[JointType.HipLeft], body.Joints[JointType.KneeLeft]);
+            canvas.DrawBone(body.Joints[JointType.HipRight], body.Joints[JointType.KneeRight]);
+            canvas.DrawBone(body.Joints[JointType.KneeLeft], body.Joints[JointType.AnkleLeft]);
+            canvas.DrawBone(body.Joints[JointType.KneeRight], body.Joints[JointType.AnkleRight]);
+            canvas.DrawBone(body.Joints[JointType.AnkleLeft], body.Joints[JointType.FootLeft]);
+            canvas.DrawBone(body.Joints[JointType.AnkleRight], body.Joints[JointType.FootRight]);
         }
 
-        public static void DrawPoint(this Canvas canvas, Joint joint)
+        public static void DrawJoint(this Canvas canvas, Joint joint)
         {
             if (joint.TrackingState == TrackingState.NotTracked) return;
+            Color c = Colors.Red;
+            Boolean inferred = false;
+            if (joint.TrackingState == TrackingState.Inferred)
+            {
+                c = Colors.Gray;
+                inferred = true;
+            }
+
 
             joint = joint.ScaleTo(canvas.ActualWidth, canvas.ActualHeight);
 
-            Ellipse ellipse = new Ellipse
-            {
-                Width = 20,
-                Height = 20,
-                Fill = new SolidColorBrush(Colors.LightBlue)
-            };
-
-            Canvas.SetLeft(ellipse, joint.Position.X - ellipse.Width / 2);
-            Canvas.SetTop(ellipse, joint.Position.Y - ellipse.Height / 2);
-
-            canvas.Children.Add(ellipse);
+            DrawPoint(canvas, joint.Position, c, inferred);
         }
 
-        public static void DrawLine(this Canvas canvas, Joint first, Joint second)
+
+        public static void DrawBone(this Canvas canvas, Joint first, Joint second)
         {
             if (first.TrackingState == TrackingState.NotTracked || second.TrackingState == TrackingState.NotTracked) return;
 
             first = first.ScaleTo(canvas.ActualWidth, canvas.ActualHeight);
             second = second.ScaleTo(canvas.ActualWidth, canvas.ActualHeight);
 
+            Color c = Colors.Yellow;
+            Boolean inferred = false;
+            if (first.TrackingState == TrackingState.Inferred || second.TrackingState == TrackingState.Inferred)
+            {
+                c = Colors.Black;
+                inferred = true;
+            }
+
+            DrawLine(canvas, first.Position, second.Position, c, inferred);
+        }
+
+        public static void DrawPoint(this Canvas canvas, CameraSpacePoint position, Color c, Boolean inferred)
+        {
+            SolidColorBrush fill = new SolidColorBrush(c);
+            if (inferred)
+            {
+                fill.Opacity = 0.70d;
+            }
+            Ellipse ellipse = new Ellipse
+            {
+                Width = 10,
+                Height = 10,
+                Fill = fill
+            };
+
+            Canvas.SetLeft(ellipse, position.X - ellipse.Width / 2);
+            Canvas.SetTop(ellipse, position.Y - ellipse.Height / 2);
+
+            canvas.Children.Add(ellipse);
+        }
+
+        public static void DrawLine(this Canvas canvas, CameraSpacePoint first, CameraSpacePoint second, Color c, Boolean inferred)
+        {
+            SolidColorBrush fill = new SolidColorBrush(c);
+            if (inferred)
+            {
+                fill.Opacity = 0.60d;
+            }
+
             Line line = new Line
             {
-                X1 = first.Position.X,
-                Y1 = first.Position.Y,
-                X2 = second.Position.X,
-                Y2 = second.Position.Y,
-                StrokeThickness = 8,
-                Stroke = new SolidColorBrush(Colors.LightBlue)
+                X1 = first.X,
+                Y1 = first.Y,
+                X2 = second.X,
+                Y2 = second.Y,
+                StrokeThickness = 3,
+                Stroke = fill
             };
 
             canvas.Children.Add(line);
         }
+
 
         #endregion
     }
