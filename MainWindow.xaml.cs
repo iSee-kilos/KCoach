@@ -106,7 +106,18 @@ namespace KCoach
                 {
                     canvas.Children.Clear();
                     // canvas.UpdateLayout();
-                    if (bodies != null && bodies.Count != 0)
+                    Boolean steadyFlag = false;
+                    if (isSteady())
+                    {
+                        steadyCounter++;
+                        if (steadyCounter > IS_STEADY)
+                            steadyFlag = true;
+                    }
+                    else
+                    {
+                        steadyCounter--;
+                    }
+                    if (bodies != null)
                     {
                         oldBodies = bodies;
                     }
@@ -114,14 +125,16 @@ namespace KCoach
                     bodies = new Body[frame.BodyFrameSource.BodyCount];
 
                     frame.GetAndRefreshBodyData(bodies);
-                    var body = bodies[0];
-                    if (body != null)
+                    foreach (var body in bodies)
                     {
-                        if (body.IsTracked)
+                        if (body != null)
                         {
-                            // Draw skeleton.
+                            if (body.IsTracked)
+                            {
+                                // Draw skeleton.
 
-                            canvas.DrawSkeleton(body, sensor);
+                                canvas.DrawSkeleton(body, sensor, steadyFlag);
+                            }
                         }
                     }
                 }
@@ -138,10 +151,11 @@ namespace KCoach
             }
         }
 
-        private Boolean isSteady(Body oldBody, Body newBody)
+        private static Boolean isSteady()
         {
             return false;
-        }
+        } 
+
        
         
     }

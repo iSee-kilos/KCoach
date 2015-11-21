@@ -123,6 +123,56 @@ namespace KCoach
             return ScaleTo(joint, width, height, 1.0f, 1.0f);
         }
 
+        public static IReadOnlyDictionary<JointType, int> GetJointAngles(this Body body)
+        {
+            // write angle
+            // knee
+            Dictionary<JointType, int> res = new Dictionary<JointType, int>();
+
+            int kneeLeftAngle = GetAngle(body.Joints[JointType.KneeLeft], body.Joints[JointType.HipLeft], body.Joints[JointType.AnkleLeft]);
+            res[JointType.KneeLeft] = kneeLeftAngle;
+
+            int kneeRightAngle = GetAngle(body.Joints[JointType.KneeRight], body.Joints[JointType.HipRight], body.Joints[JointType.AnkleRight]);
+            res[JointType.KneeRight] = kneeRightAngle;
+
+            // ankle
+            int ankleLeftAngle = GetAngle(body.Joints[JointType.AnkleLeft], body.Joints[JointType.FootLeft], body.Joints[JointType.KneeLeft]);
+            Point leftAnkle = scalePoint(body.Joints[JointType.AnkleLeft].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
+            WirteText(canvas, leftAnkle, ankleLeftAngle.ToString());
+
+            int ankleRightAngle = GetAngle(body.Joints[JointType.AnkleRight], body.Joints[JointType.FootRight], body.Joints[JointType.KneeRight]);
+            Point rightAnkle = scalePoint(body.Joints[JointType.AnkleRight].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
+            WirteText(canvas, rightAnkle, ankleRightAngle.ToString());
+
+            // spine
+            //double spineAngle = GetAngle(body.Joints[JointType.SpineMid], body.Joints[JointType.SpineBase], body.Joints[JointType.SpineShoulder]);
+            //Point spine = scalePoint(body.Joints[JointType.SpineMid].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
+            //WirteText(canvas, spine, spineAngle.ToString());
+
+            // hip
+            int hipLeftAngle = GetAngle(body.Joints[JointType.SpineBase], body.Joints[JointType.SpineMid], body.Joints[JointType.KneeLeft]);
+            int hipRightAngle = GetAngle(body.Joints[JointType.SpineBase], body.Joints[JointType.SpineMid], body.Joints[JointType.KneeRight]);
+            int hipAngle = Math.Max(hipLeftAngle, hipRightAngle);
+            Point hip = scalePoint(body.Joints[JointType.SpineBase].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
+            WirteText(canvas, hip, hipAngle.ToString());
+
+            // elbow
+            int elbowLeftAngle = GetAngle(body.Joints[JointType.ElbowLeft], body.Joints[JointType.ShoulderLeft], body.Joints[JointType.WristLeft]);
+            Point leftElbow = scalePoint(body.Joints[JointType.ElbowLeft].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
+            WirteText(canvas, leftElbow, elbowLeftAngle.ToString());
+
+            int elbowRightAngle = GetAngle(body.Joints[JointType.ElbowRight], body.Joints[JointType.ShoulderRight], body.Joints[JointType.WristRight]);
+            Point rightElbow = scalePoint(body.Joints[JointType.ElbowRight].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
+            WirteText(canvas, rightElbow, elbowRightAngle.ToString());
+
+            // neck
+            double neckAngle = GetAngle(body.Joints[JointType.Neck], body.Joints[JointType.SpineShoulder], body.Joints[JointType.Head]);
+            Point neck = scalePoint(body.Joints[JointType.Neck].Project(senser), canvas.ActualWidth, canvas.ActualHeight);
+            WirteText(canvas, neck, neckAngle.ToString());
+
+            return res;
+        }
+
         private static float Scale(double maxPixel, double maxSkeleton, float position)
         {
             float value = (float)((((maxPixel / maxSkeleton) / 2) * position) + (maxPixel / 2));
@@ -166,10 +216,12 @@ namespace KCoach
             return newPoint;
         }
 
-        public static void DrawSkeleton(this Canvas canvas, Body body, KinectSensor senser)
+        private static Boolean steadyFlag;
+
+        public static void DrawSkeleton(this Canvas canvas, Body body, KinectSensor senser, Boolean isSteady)
         {
             if (body == null) return;
-            
+            steadyFlag = isSteady;
             foreach (Joint joint in body.Joints.Values)
             {
                 DrawJoint(canvas, joint, senser);
@@ -249,7 +301,11 @@ namespace KCoach
         public static void DrawJoint(this Canvas canvas, Joint joint, KinectSensor sensor)
         {
             if (joint.TrackingState == TrackingState.NotTracked) return;
-            Color c = Colors.Red;
+            Color c;
+            if (steadyFlag)
+                c = Colors.DarkBlue;
+            else
+                c = Colors.Red;
             Boolean inferred = false;
             if (joint.TrackingState == TrackingState.Inferred)
             {
@@ -273,7 +329,11 @@ namespace KCoach
             // first = first.ScaleTo(canvas.ActualWidth, canvas.ActualHeight);
             // second = second.ScaleTo(canvas.ActualWidth, canvas.ActualHeight);
 
-            Color c = Colors.Yellow;
+            Color c;
+            if (steadyFlag)
+                c = Colors.Green;
+            else
+                c = Colors.Yellow;
             Boolean inferred = false;
             if (first.TrackingState == TrackingState.Inferred || second.TrackingState == TrackingState.Inferred)
             {
@@ -288,6 +348,9 @@ namespace KCoach
 
         public static void DrawPoint(this Canvas canvas, Point position, Color c, Boolean inferred)
         {
+            if (!inCanvas(canvas, position))
+                return;
+
             SolidColorBrush fill = new SolidColorBrush(c);
             if (inferred)
             {
@@ -310,6 +373,7 @@ namespace KCoach
 
         public static void DrawLine(this Canvas canvas, Point first, Point second, Color c, Boolean inferred)
         {
+            
             SolidColorBrush fill = new SolidColorBrush(c);
             if (inferred)
             {
@@ -360,6 +424,11 @@ namespace KCoach
             lengthb = Math.Pow(lengthb, 0.5);
             double angle = Math.Acos(ans / (lengtha * lengthb)) / Math.PI * 180;
             return Convert.ToInt32(angle);
+        }
+
+        public static Boolean inCanvas(this Canvas canvas, Point p)
+        {
+            return p.X > 0 && p.X < canvas.ActualWidth && p.Y > 0 && p.Y < canvas.ActualHeight;
         }
         #endregion
     }
