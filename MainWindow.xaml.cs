@@ -36,6 +36,10 @@ namespace KCoach
             squat[JointType.SpineMid] = 180;
         }
 
+        private bool inMatch = false;
+
+        private Action currentAction = null;
+
 
         /// <summary>
         /// definition of bones
@@ -249,12 +253,22 @@ namespace KCoach
 
         private void GoBack(object sender, RoutedEventArgs e)
         {
+            this.inMatch = false;
+            this.currentAction = null;
             backButton.Visibility = System.Windows.Visibility.Hidden;
-            //    navigationRegion.Content = this.kinectRegionGrid;
+            canvas.Visibility = Visibility.Hidden;
+            camera.Visibility = Visibility.Hidden;
+            scrollViewer.Visibility = Visibility.Visible;
         }
 
         private void ButtonClick(object sender, RoutedEventArgs e)
         {
+            this.inMatch = true;
+            this.currentAction = ((Button)e.OriginalSource).DataContext as Action;
+            camera.Visibility = Visibility.Visible;
+            canvas.Visibility = Visibility.Visible;
+            backButton.Visibility = Visibility.Visible;
+            scrollViewer.Visibility = Visibility.Hidden;
         }
 
     }
