@@ -134,19 +134,19 @@ namespace KCoach
                         if (steadyCounter > IS_STEADY)
                             steadyFlag = true;
 
-                        Point p = new Point();
-                        p.X = canvas.ActualWidth / 2;
-                        p.Y = canvas.ActualHeight / 2;
-                        canvas.WirteText(p, "steady");
+                        //Point p = new Point();
+                        //p.X = canvas.ActualWidth / 2;
+                        //p.Y = canvas.ActualHeight / 2;
+                        //canvas.WirteText(p, "steady");
                     }
                     else
                     {
                         steadyCounter = 0;
                         steadyFlag = false;
-                        Point p = new Point();
-                        p.X = canvas.ActualWidth / 2;
-                        p.Y = canvas.ActualHeight / 2;
-                        canvas.WirteText(p, "not steady");
+                        //Point p = new Point();
+                        //p.X = canvas.ActualWidth / 2;
+                        //p.Y = canvas.ActualHeight / 2;
+                        //canvas.WirteText(p, "not steady");
                     }
                     if (bodies != null)
                     {
@@ -184,6 +184,9 @@ namespace KCoach
                 if (frame != null)
                 {
                     camera.Source = frame.ToBitmap();
+                    int width = frame.FrameDescription.Width;
+                    int height = frame.FrameDescription.Height;
+                    canvas.setMaxSize(width, height);
                 }
             }
         }
