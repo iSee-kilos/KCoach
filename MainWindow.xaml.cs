@@ -25,15 +25,15 @@ namespace KCoach
 
         private static int IS_STEADY = 30;
 
-        private static Dictionary<JointType, int> squat;
+        private static Dictionary<JointType, int> standard;
 
-        private void setSquat()
+        public void setStandard()
         {
-            squat = new Dictionary<JointType, int>();
-            squat[JointType.KneeLeft] = 180;
-            squat[JointType.KneeRight] = 180;
-            squat[JointType.SpineBase] = 180;
-            squat[JointType.SpineMid] = 180;
+            standard = new Dictionary<JointType, int>();
+            standard[JointType.KneeLeft] = 180;
+            standard[JointType.KneeRight] = 180;
+            standard[JointType.SpineBase] = 180;
+            standard[JointType.SpineMid] = 180;
         }
 
 
@@ -83,7 +83,7 @@ namespace KCoach
             this.bones.Add(new Tuple<JointType, JointType>(JointType.KneeLeft, JointType.AnkleLeft));
             this.bones.Add(new Tuple<JointType, JointType>(JointType.AnkleLeft, JointType.FootLeft));
 
-            setSquat();
+            setStandard();
 
 
             this.sensor = KinectSensor.GetDefault();
@@ -156,7 +156,7 @@ namespace KCoach
                             {
                                 // Draw skeleton.
                                 var angles = body.GetJointAngles();
-                                var wrongJoints = match(squat, angles);
+                                var wrongJoints = match(standard, angles);
                                 canvas.DrawSkeleton(body, sensor, steadyFlag);
                                 if (steadyFlag)
                                     canvas.DrawWrongJoints(body, wrongJoints, sensor);
