@@ -86,6 +86,7 @@ namespace KCoach
 
             InitializeComponent();
 
+            this.itemsControl.ItemsSource = StaticActionDatabase.Instance.Actions;
         }
 
         private void ReaderMultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
@@ -138,9 +139,9 @@ namespace KCoach
                         }
                     }
                 }
-                    
+
             }
-                
+
 
             using (var frame = reference.ColorFrameReference.AcquireFrame())
             {
@@ -154,9 +155,17 @@ namespace KCoach
         private static Boolean isSteady()
         {
             return false;
-        } 
+        }
 
-       
-        
+
+        private void GoBack(object sender, RoutedEventArgs e)
+        {
+            backButton.Visibility = System.Windows.Visibility.Hidden;
+            //    navigationRegion.Content = this.kinectRegionGrid;
+        }
+
+        private void ButtonClick(object sender, RoutedEventArgs e)
+        {
+        }
     }
 }

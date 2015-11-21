@@ -6,6 +6,7 @@
 
 namespace Microsoft.Samples.Kinect.DepthBasics
 {
+    using Microsoft.Kinect.Wpf.Controls;
     using System;
     using System.Windows;
 
@@ -14,5 +15,6 @@ namespace Microsoft.Samples.Kinect.DepthBasics
     /// </summary>
     public partial class App : Application
     {
+        internal KinectRegion KinectRegion { get; set; }
     }
 }
