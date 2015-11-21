@@ -1,292 +1,334 @@
-﻿//------------------------------------------------------------------------------
-// <copyright file="MainWindow.xaml.cs" company="Microsoft">
-//     Copyright (c) Microsoft Corporation.  All rights reserved.
-// </copyright>
-//------------------------------------------------------------------------------
+﻿using System.Collections.Generic;
+using System.Windows;
 
-namespace Microsoft.Samples.Kinect.DepthBasics
+using Microsoft.Kinect;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System;
+
+namespace KCoach
 {
-    using System;
-    using System.ComponentModel;
-    using System.Diagnostics;
-    using System.Globalization;
-    using System.IO;
-    using System.Windows;
-    using System.Windows.Media;
-    using System.Windows.Media.Imaging;
-    using Microsoft.Kinect;
 
     /// <summary>
-    /// Interaction logic for MainWindow
+    /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, INotifyPropertyChanged
+    public partial class MainWindow : Window
     {
-        /// <summary>
-        /// Map depth range to byte range
-        /// </summary>
-        private const int MapDepthToByte = 8000 / 256;
-        
-        /// <summary>
-        /// Active Kinect sensor
-        /// </summary>
-        private KinectSensor kinectSensor = null;
+        private KinectSensor sensor;
+        private MultiSourceFrameReader _reader;
+        private IList<Body> bodies;
 
         /// <summary>
-        /// Reader for depth frames
+        /// Radius of drawn hand circles
         /// </summary>
-        private DepthFrameReader depthFrameReader = null;
+        private const double HandSize = 30;
 
         /// <summary>
-        /// Description of the data contained in the depth frame
+        /// Thickness of drawn joint lines
         /// </summary>
-        private FrameDescription depthFrameDescription = null;
-            
-        /// <summary>
-        /// Bitmap to display
-        /// </summary>
-        private WriteableBitmap depthBitmap = null;
+        private const double JointThickness = 3;
 
         /// <summary>
-        /// Intermediate storage for frame data converted to color
+        /// Thickness of clip edge rectangles
         /// </summary>
-        private byte[] depthPixels = null;
+        private const double ClipBoundsThickness = 10;
 
         /// <summary>
-        /// Current status text to display
+        /// Constant for clamping Z values of camera space points from being negative
         /// </summary>
-        private string statusText = null;
+        private const float InferredZPositionClamp = 0.1f;
 
         /// <summary>
-        /// Initializes a new instance of the MainWindow class.
+        /// Brush used for drawing hands that are currently tracked as closed
         /// </summary>
+        private readonly Brush handClosedBrush = new SolidColorBrush(Color.FromArgb(128, 255, 0, 0));
+
+        /// <summary>
+        /// Brush used for drawing hands that are currently tracked as opened
+        /// </summary>
+        private readonly Brush handOpenBrush = new SolidColorBrush(Color.FromArgb(128, 0, 255, 0));
+
+        /// <summary>
+        /// Brush used for drawing hands that are currently tracked as in lasso (pointer) position
+        /// </summary>
+        private readonly Brush handLassoBrush = new SolidColorBrush(Color.FromArgb(128, 0, 0, 255));
+
+        /// <summary>
+        /// Brush used for drawing joints that are currently tracked
+        /// </summary>
+        private readonly Brush trackedJointBrush = new SolidColorBrush(Color.FromArgb(255, 68, 192, 68));
+
+        /// <summary>
+        /// Brush used for drawing joints that are currently inferred
+        /// </summary>        
+        private readonly Brush inferredJointBrush = Brushes.Yellow;
+
+        /// <summary>
+        /// Pen used for drawing bones that are currently inferred
+        /// </summary>        
+        private readonly Pen inferredBonePen = new Pen(Brushes.Gray, 1);
+
+        /// <summary>
+        /// Drawing group for body rendering output
+        /// </summary>
+        private DrawingGroup drawingGroup;
+
+        /// <summary>
+        /// Coordinate mapper to map one type of point to another
+        /// </summary>
+        private CoordinateMapper coordinateMapper = null;
+
+        /// <summary>
+        /// definition of bones
+        /// </summary>
+        private List<Tuple<JointType, JointType>> bones;
+
+        /// <summary>
+        /// List of colors for each body tracked
+        /// </summary>
+        private List<Pen> bodyColors;
+
         public MainWindow()
         {
-            // get the kinectSensor object
-            this.kinectSensor = KinectSensor.GetDefault();
+            // Create the drawing group we'll use for drawing
+            this.drawingGroup = new DrawingGroup();
 
-            // open the reader for the depth frames
-            this.depthFrameReader = this.kinectSensor.DepthFrameSource.OpenReader();
+            // a bone defined as a line between two joints
+            this.bones = new List<Tuple<JointType, JointType>>();
 
-            // wire handler for frame arrival
-            this.depthFrameReader.FrameArrived += this.Reader_FrameArrived;
+            // Torso
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.Head, JointType.Neck));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.Neck, JointType.SpineShoulder));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineShoulder, JointType.SpineMid));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineMid, JointType.SpineBase));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineShoulder, JointType.ShoulderRight));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineShoulder, JointType.ShoulderLeft));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineBase, JointType.HipRight));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.SpineBase, JointType.HipLeft));
 
-            // get FrameDescription from DepthFrameSource
-            this.depthFrameDescription = this.kinectSensor.DepthFrameSource.FrameDescription;
+            // Right Arm
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.ShoulderRight, JointType.ElbowRight));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.ElbowRight, JointType.WristRight));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.WristRight, JointType.HandRight));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.HandRight, JointType.HandTipRight));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.WristRight, JointType.ThumbRight));
 
-            // allocate space to put the pixels being received and converted
-            this.depthPixels = new byte[this.depthFrameDescription.Width * this.depthFrameDescription.Height];
+            // Left Arm
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.ShoulderLeft, JointType.ElbowLeft));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.ElbowLeft, JointType.WristLeft));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.WristLeft, JointType.HandLeft));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.HandLeft, JointType.HandTipLeft));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.WristLeft, JointType.ThumbLeft));
 
-            // create the bitmap to display
-            this.depthBitmap = new WriteableBitmap(this.depthFrameDescription.Width, this.depthFrameDescription.Height, 96.0, 96.0, PixelFormats.Gray8, null);
+            // Right Leg
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.HipRight, JointType.KneeRight));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.KneeRight, JointType.AnkleRight));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.AnkleRight, JointType.FootRight));
 
-            // set IsAvailableChanged event notifier
-            this.kinectSensor.IsAvailableChanged += this.Sensor_IsAvailableChanged;
+            // Left Leg
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.HipLeft, JointType.KneeLeft));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.KneeLeft, JointType.AnkleLeft));
+            this.bones.Add(new Tuple<JointType, JointType>(JointType.AnkleLeft, JointType.FootLeft));
 
-            // open the sensor
-            this.kinectSensor.Open();
+            // populate body colors, one for each BodyIndex
+            this.bodyColors = new List<Pen>();
 
-            // set the status text
-            this.StatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
-                                                            : Properties.Resources.NoSensorStatusText;
+            this.bodyColors.Add(new Pen(Brushes.Red, 6));
+            this.bodyColors.Add(new Pen(Brushes.Orange, 6));
+            this.bodyColors.Add(new Pen(Brushes.Green, 6));
+            this.bodyColors.Add(new Pen(Brushes.Blue, 6));
+            this.bodyColors.Add(new Pen(Brushes.Indigo, 6));
+            this.bodyColors.Add(new Pen(Brushes.Violet, 6));
 
-            // use the window object as the view model in this simple example
-            this.DataContext = this;
-
-            // initialize the components (controls) of the window
-            this.InitializeComponent();
-        }
-
-        /// <summary>
-        /// INotifyPropertyChangedPropertyChanged event to allow window controls to bind to changeable data
-        /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        /// <summary>
-        /// Gets the bitmap to display
-        /// </summary>
-        public ImageSource ImageSource
-        {
-            get
+            this.sensor = KinectSensor.GetDefault();
+            if (sensor != null)
             {
-                return this.depthBitmap;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the current status text to display
-        /// </summary>
-        public string StatusText
-        {
-            get
-            {
-                return this.statusText;
+                sensor.Open();
             }
 
-            set
+            _reader = sensor.OpenMultiSourceFrameReader(FrameSourceTypes.Color | FrameSourceTypes.Depth | FrameSourceTypes.Body);
+            _reader.MultiSourceFrameArrived += ReaderMultiSourceFrameArrived;
+
+            // get the coordinate mapper
+            this.coordinateMapper = this.sensor.CoordinateMapper;
+
+            InitializeComponent();
+
+        }
+
+        private void ReaderMultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
+        {
+            var reference = e.FrameReference.AcquireFrame();
+            bool dataReceived = false;
+
+            using (var frame = reference.DepthFrameReference.AcquireFrame())
             {
-                if (this.statusText != value)
+                if (frame != null)
                 {
-                    this.statusText = value;
 
-                    // notify any bound elements that the text has changed
-                    if (this.PropertyChanged != null)
-                    {
-                        this.PropertyChanged(this, new PropertyChangedEventArgs("StatusText"));
-                    }
                 }
             }
-        }
 
-        /// <summary>
-        /// Execute shutdown tasks
-        /// </summary>
-        /// <param name="sender">object sending the event</param>
-        /// <param name="e">event arguments</param>
-        private void MainWindow_Closing(object sender, CancelEventArgs e)
-        {
-            if (this.depthFrameReader != null)
+            using (var frame = reference.BodyFrameReference.AcquireFrame())
             {
-                // DepthFrameReader is IDisposable
-                this.depthFrameReader.Dispose();
-                this.depthFrameReader = null;
-            }
-
-            if (this.kinectSensor != null)
-            {
-                this.kinectSensor.Close();
-                this.kinectSensor = null;
-            }
-        }
-
-        /// <summary>
-        /// Handles the user clicking on the screenshot button
-        /// </summary>
-        /// <param name="sender">object sending the event</param>
-        /// <param name="e">event arguments</param>
-        private void ScreenshotButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (this.depthBitmap != null)
-            {
-                // create a png bitmap encoder which knows how to save a .png file
-                BitmapEncoder encoder = new PngBitmapEncoder();
-
-                // create frame from the writable bitmap and add to encoder
-                encoder.Frames.Add(BitmapFrame.Create(this.depthBitmap));
-
-                string time = System.DateTime.UtcNow.ToString("hh'-'mm'-'ss", CultureInfo.CurrentUICulture.DateTimeFormat);
-
-                string myPhotos = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-
-                string path = Path.Combine(myPhotos, "KinectScreenshot-Depth-" + time + ".png");
-
-                // write the new file to disk
-                try
+                if (frame != null)
                 {
-                    // FileStream is IDisposable
-                    using (FileStream fs = new FileStream(path, FileMode.Create))
-                    {
-                        encoder.Save(fs);
-                    }
+                    canvas.Children.Clear();
 
-                    this.StatusText = string.Format(CultureInfo.CurrentCulture, Properties.Resources.SavedScreenshotStatusTextFormat, path);
+                    bodies = new Body[frame.BodyFrameSource.BodyCount];
+
+                    frame.GetAndRefreshBodyData(bodies);
+                    dataReceived = true;
                 }
-                catch (IOException)
-                {
-                    this.StatusText = string.Format(CultureInfo.CurrentCulture, Properties.Resources.FailedScreenshotStatusTextFormat, path);
-                }
+                    
             }
-        }
-
-        /// <summary>
-        /// Handles the depth frame data arriving from the sensor
-        /// </summary>
-        /// <param name="sender">object sending the event</param>
-        /// <param name="e">event arguments</param>
-        private void Reader_FrameArrived(object sender, DepthFrameArrivedEventArgs e)
-        {
-            bool depthFrameProcessed = false;
-
-            using (DepthFrame depthFrame = e.FrameReference.AcquireFrame())
+            
+            if (dataReceived == true)
             {
-                if (depthFrame != null)
+                using (DrawingContext dc = this.drawingGroup.Open())
                 {
-                    // the fastest way to process the body index data is to directly access 
-                    // the underlying buffer
-                    using (Microsoft.Kinect.KinectBuffer depthBuffer = depthFrame.LockImageBuffer())
+                    int penIndex = 0;
+                    foreach (var body in bodies)
                     {
-                        // verify data and write the color data to the display bitmap
-                        if (((this.depthFrameDescription.Width * this.depthFrameDescription.Height) == (depthBuffer.Size / this.depthFrameDescription.BytesPerPixel)) &&
-                            (this.depthFrameDescription.Width == this.depthBitmap.PixelWidth) && (this.depthFrameDescription.Height == this.depthBitmap.PixelHeight))
+                        if (body != null)
                         {
-                            // Note: In order to see the full range of depth (including the less reliable far field depth)
-                            // we are setting maxDepth to the extreme potential depth threshold
-                            ushort maxDepth = ushort.MaxValue;
+                            if (body.IsTracked)
+                            {
+                                Pen drawPen = this.bodyColors[penIndex++];
+                                // Draw skeleton.
+                                // canvas.DrawSkeleton(body);
+                                IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
 
-                            // If you wish to filter by reliable depth distance, uncomment the following line:
-                            //// maxDepth = depthFrame.DepthMaxReliableDistance
-                            
-                            this.ProcessDepthFrameData(depthBuffer.UnderlyingBuffer, depthBuffer.Size, depthFrame.DepthMinReliableDistance, maxDepth);
-                            depthFrameProcessed = true;
+                                // convert the joint points to depth (display) space
+                                Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
+
+                                foreach (JointType jointType in joints.Keys)
+                                {
+                                    // sometimes the depth(Z) of an inferred joint may show as negative
+                                    // clamp down to 0.1f to prevent coordinatemapper from returning (-Infinity, -Infinity)
+                                    CameraSpacePoint position = joints[jointType].Position;
+                                    if (position.Z < 0)
+                                    {
+                                        position.Z = InferredZPositionClamp;
+                                    }
+
+                                    DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
+                                    jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
+                                }
+
+                                this.DrawBody(joints, jointPoints, dc, drawPen);
+
+                                this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft], dc);
+                                this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight], dc);
+                            }
                         }
                     }
                 }
+                
             }
 
-            if (depthFrameProcessed)
+            using (var frame = reference.ColorFrameReference.AcquireFrame())
             {
-                this.RenderDepthPixels();
+                if (frame != null)
+                {
+                    camera.Source = frame.ToBitmap();
+                }
             }
         }
 
         /// <summary>
-        /// Directly accesses the underlying image buffer of the DepthFrame to 
-        /// create a displayable bitmap.
-        /// This function requires the /unsafe compiler option as we make use of direct
-        /// access to the native memory pointed to by the depthFrameData pointer.
+        /// Draws a body
         /// </summary>
-        /// <param name="depthFrameData">Pointer to the DepthFrame image data</param>
-        /// <param name="depthFrameDataSize">Size of the DepthFrame image data</param>
-        /// <param name="minDepth">The minimum reliable depth value for the frame</param>
-        /// <param name="maxDepth">The maximum reliable depth value for the frame</param>
-        private unsafe void ProcessDepthFrameData(IntPtr depthFrameData, uint depthFrameDataSize, ushort minDepth, ushort maxDepth)
+        /// <param name="joints">joints to draw</param>
+        /// <param name="jointPoints">translated positions of joints to draw</param>
+        /// <param name="drawingContext">drawing context to draw to</param>
+        /// <param name="drawingPen">specifies color to draw a specific body</param>
+        private void DrawBody(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, DrawingContext drawingContext, Pen drawingPen)
         {
-            // depth frame data is a 16 bit value
-            ushort* frameData = (ushort*)depthFrameData;
-
-            // convert depth to a visual representation
-            for (int i = 0; i < (int)(depthFrameDataSize / this.depthFrameDescription.BytesPerPixel); ++i)
+            // Draw the bones
+            foreach (var bone in this.bones)
             {
-                // Get the depth for this pixel
-                ushort depth = frameData[i];
+                this.DrawBone(joints, jointPoints, bone.Item1, bone.Item2, drawingContext, drawingPen);
+            }
 
-                // To convert to a byte, we're mapping the depth value to the byte range.
-                // Values outside the reliable depth range are mapped to 0 (black).
-                this.depthPixels[i] = (byte)(depth >= minDepth && depth <= maxDepth ? (depth / MapDepthToByte) : 0);
+            // Draw the joints
+            foreach (JointType jointType in joints.Keys)
+            {
+                Brush drawBrush = null;
+
+                TrackingState trackingState = joints[jointType].TrackingState;
+
+                if (trackingState == TrackingState.Tracked)
+                {
+                    drawBrush = this.trackedJointBrush;
+                }
+                else if (trackingState == TrackingState.Inferred)
+                {
+                    drawBrush = this.inferredJointBrush;
+                }
+
+                if (drawBrush != null)
+                {
+                    drawingContext.DrawEllipse(drawBrush, null, jointPoints[jointType], JointThickness, JointThickness);
+                }
             }
         }
 
         /// <summary>
-        /// Renders color pixels into the writeableBitmap.
+        /// Draws one bone of a body (joint to joint)
         /// </summary>
-        private void RenderDepthPixels()
+        /// <param name="joints">joints to draw</param>
+        /// <param name="jointPoints">translated positions of joints to draw</param>
+        /// <param name="jointType0">first joint of bone to draw</param>
+        /// <param name="jointType1">second joint of bone to draw</param>
+        /// <param name="drawingContext">drawing context to draw to</param>
+        /// /// <param name="drawingPen">specifies color to draw a specific bone</param>
+        private void DrawBone(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, JointType jointType0, JointType jointType1, DrawingContext drawingContext, Pen drawingPen)
         {
-            this.depthBitmap.WritePixels(
-                new Int32Rect(0, 0, this.depthBitmap.PixelWidth, this.depthBitmap.PixelHeight),
-                this.depthPixels,
-                this.depthBitmap.PixelWidth,
-                0);
+            Joint joint0 = joints[jointType0];
+            Joint joint1 = joints[jointType1];
+
+            // If we can't find either of these joints, exit
+            if (joint0.TrackingState == TrackingState.NotTracked ||
+                joint1.TrackingState == TrackingState.NotTracked)
+            {
+                return;
+            }
+
+            // We assume all drawn bones are inferred unless BOTH joints are tracked
+            Pen drawPen = this.inferredBonePen;
+            if ((joint0.TrackingState == TrackingState.Tracked) && (joint1.TrackingState == TrackingState.Tracked))
+            {
+                drawPen = drawingPen;
+            }
+
+            drawingContext.DrawLine(drawPen, jointPoints[jointType0], jointPoints[jointType1]);
         }
 
         /// <summary>
-        /// Handles the event which the sensor becomes unavailable (E.g. paused, closed, unplugged).
+        /// Draws a hand symbol if the hand is tracked: red circle = closed, green circle = opened; blue circle = lasso
         /// </summary>
-        /// <param name="sender">object sending the event</param>
-        /// <param name="e">event arguments</param>
-        private void Sensor_IsAvailableChanged(object sender, IsAvailableChangedEventArgs e)
+        /// <param name="handState">state of the hand</param>
+        /// <param name="handPosition">position of the hand</param>
+        /// <param name="drawingContext">drawing context to draw to</param>
+        private void DrawHand(HandState handState, Point handPosition, DrawingContext drawingContext)
         {
-            // on failure, set the status text
-            this.StatusText = this.kinectSensor.IsAvailable ? Properties.Resources.RunningStatusText
-                                                            : Properties.Resources.SensorNotAvailableStatusText;
+            switch (handState)
+            {
+                case HandState.Closed:
+                    drawingContext.DrawEllipse(this.handClosedBrush, null, handPosition, HandSize, HandSize);
+                    break;
+
+                case HandState.Open:
+                    drawingContext.DrawEllipse(this.handOpenBrush, null, handPosition, HandSize, HandSize);
+                    break;
+
+                case HandState.Lasso:
+                    drawingContext.DrawEllipse(this.handLassoBrush, null, handPosition, HandSize, HandSize);
+                    break;
+            }
         }
+
+        
     }
 }
