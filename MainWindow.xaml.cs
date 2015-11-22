@@ -126,6 +126,9 @@ namespace KCoach
                 if (frame != null)
                 {
                     canvas.Children.Clear();
+                    
+                    bodies = new Body[frame.BodyFrameSource.BodyCount];
+                    frame.GetAndRefreshBodyData(bodies);
                     // canvas.UpdateLayout();
                     Boolean steadyFlag = false;
                     if (isSteady())
@@ -137,7 +140,7 @@ namespace KCoach
                         //Point p = new Point();
                         //p.X = canvas.ActualWidth / 2;
                         //p.Y = canvas.ActualHeight / 2;
-                        //canvas.WirteText(p, "steady");
+                        //canvas.WirteText(p, "steady", Colors.Red, 20);
                     }
                     else
                     {
@@ -146,16 +149,14 @@ namespace KCoach
                         //Point p = new Point();
                         //p.X = canvas.ActualWidth / 2;
                         //p.Y = canvas.ActualHeight / 2;
-                        //canvas.WirteText(p, "not steady");
+                        //canvas.WirteText(p, "not steady", Colors.Red, 20);
                     }
                     if (bodies != null)
                     {
                         oldBodies = bodies;
                     }
 
-                    bodies = new Body[frame.BodyFrameSource.BodyCount];
-
-                    frame.GetAndRefreshBodyData(bodies);
+                    
                     foreach (var body in bodies)
                     {
                         if (body != null)
@@ -197,7 +198,7 @@ namespace KCoach
                 return false;
 
             var body_len = oldBodies.Count;
-            double delta = 0.05;
+            double delta = 0.03;
             if (bodies.Count < body_len)
             {
                 body_len = bodies.Count;
@@ -209,6 +210,8 @@ namespace KCoach
                 Body nb = bodies[i];
                 if (ob == null || nb == null)
                     continue;
+                if (match(ob.GetJointAngles(), nb.GetJointAngles()).Length > 0)
+                    return false;
                 foreach (var key in ob.Joints.Keys)
                 {
                     var oj = ob.Joints[key];
@@ -234,11 +237,14 @@ namespace KCoach
                     }
                 }
             }
-
-            return true;
+            Point p = new Point();
+            p.X = canvas.ActualWidth / 2;
+            p.Y = canvas.ActualHeight / 2;
+            canvas.WirteText(p, "null", Colors.Red, 20);
+            return false;
         }
 
-        private JointType[] match(IDictionary<JointType, int> template, IReadOnlyDictionary<JointType, int> action)
+        private JointType[] match(IReadOnlyDictionary<JointType, int> template, IReadOnlyDictionary<JointType, int> action)
         {
             var unmatchTypes = new List<JointType>();
             var delta = 10;
@@ -284,7 +290,7 @@ namespace KCoach
             canvas.Visibility = this.inMatch ? Visibility.Visible : Visibility.Hidden;
             camera.Visibility = this.inMatch ? Visibility.Visible : Visibility.Hidden;
             scrollViewer.Visibility = this.inMatch ? Visibility.Hidden : Visibility.Visible;
-            textBlock.Visibility = this.inMatch ? Visibility.Hidden : Visibility.Visible;
+       //     textBlock.Visibility = this.inMatch ? Visibility.Hidden : Visibility.Visible;
         }
 
 

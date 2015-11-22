@@ -23,9 +23,9 @@ namespace KCoach
 
         private Uri imagePath = null;
 
-        private IDictionary<JointType, int> template;
+        private IReadOnlyDictionary<JointType, int> template;
 
-        public Action(string uniqueId, string title, Uri imagePath, string description, IDictionary<JointType, int> template)
+        public Action(string uniqueId, string title, Uri imagePath, string description, IReadOnlyDictionary<JointType, int> template)
         {
             this.uniqueId = uniqueId;
             this.title = title;
@@ -52,7 +52,7 @@ namespace KCoach
             set { this.SetProperty(ref this.description, value); }
         }
 
-        public IDictionary<JointType, int> Template
+        public IReadOnlyDictionary<JointType, int> Template
         {
             get { return this.template; }
         }
