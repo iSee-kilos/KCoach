@@ -23,15 +23,18 @@ namespace KCoach
 
         private Uri imagePath = null;
 
-        private IDictionary<JointType, int> template;
+        private IDictionary<JointType, int> startTemplate;
 
-        public Action(string uniqueId, string title, Uri imagePath, string description, IDictionary<JointType, int> template)
+        private IDictionary<JointType, int> endTemplate;
+
+        public Action(string uniqueId, string title, Uri imagePath, string description, IDictionary<JointType, int> startTemplate, IDictionary<JointType, int> endTemplate)
         {
             this.uniqueId = uniqueId;
             this.title = title;
             this.imagePath = imagePath;
             this.description = description;
-            this.template = template;
+            this.startTemplate = startTemplate;
+            this.endTemplate = endTemplate;
         }
 
         public string UniqueId
@@ -52,9 +55,14 @@ namespace KCoach
             set { this.SetProperty(ref this.description, value); }
         }
 
-        public IDictionary<JointType, int> Template
+        public IDictionary<JointType, int> StartTemplate
         {
-            get { return this.template; }
+            get { return this.startTemplate; }
+        }
+
+        public IDictionary<JointType, int> EndTemplate
+        {
+            get { return this.endTemplate; }
         }
 
         public ImageSource Image

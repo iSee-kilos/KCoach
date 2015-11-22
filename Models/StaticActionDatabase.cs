@@ -28,6 +28,7 @@ namespace KCoach
                 "Squat",
                 new Uri("Images/icon_squat.png", UriKind.Relative),
                 "No Desc",
+                squatTemplate,
                 squatTemplate
                 ));
 
@@ -35,43 +36,10 @@ namespace KCoach
                 "Lunge",
                 new Uri("Images/icon_lunge.png", UriKind.Relative),
                 "No Desc",
+                squatTemplate,
                 squatTemplate
                 ));
 
-            items.Add(new Action("Lunge",
-                "Lunge",
-                new Uri("Images/icon_lunge.png", UriKind.Relative),
-                "No Desc",
-                squatTemplate
-                ));
-
-            items.Add(new Action("Lunge",
-                "Lunge",
-                new Uri("Images/icon_lunge.png", UriKind.Relative),
-                "No Desc",
-                squatTemplate
-                ));
-
-            items.Add(new Action("Lunge",
-                "Lunge",
-                new Uri("Images/icon_lunge.png", UriKind.Relative),
-                "No Desc",
-                squatTemplate
-                ));
-
-            items.Add(new Action("Lunge",
-                "Lunge",
-                new Uri("Images/icon_lunge.png", UriKind.Relative),
-                "No Desc",
-                squatTemplate
-                ));
-
-            items.Add(new Action("Lunge",
-                "Lunge",
-                new Uri("Images/icon_lunge.png", UriKind.Relative),
-                "No Desc",
-                squatTemplate
-                ));
         }
 
         public ObservableCollection<Action> Actions

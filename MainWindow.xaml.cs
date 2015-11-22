@@ -25,12 +25,28 @@ namespace KCoach
         private IList<Body> oldBodies;
 
         private static int steadyCounter;
+        private static int sampleCounter;
 
-        private static int IS_STEADY = 30;
+        private static int IS_STEADY = 10;
+
+        private static int SAMPLE_THR = 10;
 
         private bool inMatch = false;
 
         private Action currentAction = null;
+
+        /*
+        0 not start and not steady
+        1 steady (next frame will immediately enter stage 2)
+        2 start (and steady)
+        3 start and not steady
+        4 steady (next frame will immediately enter stage 5)
+        5 end
+        */
+        private static int stage = 0;
+
+        private static int n_total_movement = 0;
+        private static int n_succ_movement = 0;
 
 
         /// <summary>
@@ -111,6 +127,8 @@ namespace KCoach
 
         private void ReaderMultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
+
+
             var reference = e.FrameReference.AcquireFrame();
 
             using (var frame = reference.DepthFrameReference.AcquireFrame())
@@ -123,16 +141,35 @@ namespace KCoach
 
             using (var frame = reference.BodyFrameReference.AcquireFrame())
             {
+                
                 if (frame != null)
                 {
+                    sampleCounter++;
                     canvas.Children.Clear();
+                    String s1 = "total movements: " + n_total_movement.ToString();
+                    String s2 = "successful movements: " + n_succ_movement.ToString();
+                    String s3 = "success ratio: " + ((double)((double)n_succ_movement / (double)n_total_movement) * 100).ToString() + "%";
+                    Point p1 = new Point(); p1.X = canvas.ActualWidth - 300; p1.Y = 100;
+                    canvas.WirteText(p1, s1, Colors.Red);
+                    Point p2 = new Point(); p2.X = canvas.ActualWidth - 300; p2.Y = 200;
+                    canvas.WirteText(p2, s2, Colors.Red);
+                    Point p3 = new Point(); p3.X = canvas.ActualWidth - 300; p3.Y = 300;
+                    canvas.WirteText(p3, s3, Colors.Red);
                     // canvas.UpdateLayout();
                     Boolean steadyFlag = false;
+                    
+                    bodies = new Body[frame.BodyFrameSource.BodyCount];
+
                     if (isSteady())
                     {
                         steadyCounter++;
-                        if (steadyCounter > IS_STEADY)
+                        if (steadyCounter > IS_STEADY && !steadyFlag)
+                        {
+                            oldBodies = bodies;
+                            sampleCounter = 0;
                             steadyFlag = true;
+                        }
+                            
 
                         //Point p = new Point();
                         //p.X = canvas.ActualWidth / 2;
@@ -142,18 +179,28 @@ namespace KCoach
                     else
                     {
                         steadyCounter = 0;
-                        steadyFlag = false;
+
+                        if (steadyFlag)
+                        {
+                            // this.Close();
+                            oldBodies = bodies;
+                            sampleCounter = 0;
+                            steadyFlag = false;
+                        }
+                                         
+                        
                         //Point p = new Point();
                         //p.X = canvas.ActualWidth / 2;
                         //p.Y = canvas.ActualHeight / 2;
                         //canvas.WirteText(p, "not steady");
                     }
-                    if (bodies != null)
+                    if (sampleCounter > SAMPLE_THR)
                     {
                         oldBodies = bodies;
+                        sampleCounter = 0;
                     }
 
-                    bodies = new Body[frame.BodyFrameSource.BodyCount];
+                    
 
                     frame.GetAndRefreshBodyData(bodies);
                     foreach (var body in bodies)
@@ -166,10 +213,58 @@ namespace KCoach
                                 var angles = body.GetJointAngles();
                                 if (currentAction != null)
                                 {
-                                    var wrongJoints = match(currentAction.Template, angles);
+                                    /*
+                                    0 not start and not steady
+                                    1 steady (next frame will immediately enter stage 2)
+                                    2 start (and steady)
+                                    3 start and not steady
+                                    4 steady (next frame will immediately enter stage 5)
+                                    5 end
+                                    */
+                                    JointType[] wrongJoints = null;
+
+
+                                    if (stage == 0 && steadyFlag)
+                                    {
+                                        stage = 1;
+                                        n_total_movement++;
+                                    }
+                                    else if (stage == 1 && steadyFlag)
+                                    {
+                                        stage = 2;
+                                    }
+                                    else if (stage == 2 && !steadyFlag)
+                                    {
+                                        stage = 3;
+                                    }
+                                    else if (stage == 3 && steadyFlag)
+                                    {
+                                        n_succ_movement++;
+                                        stage = 4;
+                                    }
+                                    else if (stage == 4 && steadyFlag)
+                                    {
+                                        stage = 5;
+                                    }
+                                    else if (stage == 5 && !steadyFlag)
+                                    {
+                                        stage = 0;
+                                    }
+
+                                    if (stage == 1)
+                                    {
+                                        wrongJoints = match(currentAction.StartTemplate, angles);
+                                    }
+                                    else if (stage == 4)
+                                    {
+                                        wrongJoints = match(currentAction.EndTemplate, angles);
+                                    }
+
                                     canvas.DrawSkeleton(body, sensor, steadyFlag);
-                                    if (steadyFlag)
+                                    if (steadyFlag && wrongJoints != null)
+                                    {
                                         canvas.DrawWrongJoints(body, wrongJoints, sensor);
+                                    }   
                                 }
                             }
                         }
@@ -197,7 +292,7 @@ namespace KCoach
                 return false;
 
             var body_len = oldBodies.Count;
-            double delta = 0.05;
+            double delta = 0.03;
             if (bodies.Count < body_len)
             {
                 body_len = bodies.Count;
@@ -276,7 +371,10 @@ namespace KCoach
             this.inMatch = true;
             this.currentAction = ((Button)e.OriginalSource).DataContext as Action;
             SwitchButtons();
-        }
+            n_total_movement = 0;
+            n_succ_movement = 0;
+            stage = 0;
+    }
 
         private void SwitchButtons()
         {
