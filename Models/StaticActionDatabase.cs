@@ -60,6 +60,30 @@ namespace KCoach
                 lungeEnd
                 ));
 
+            items.Add(new Action("Deadlift",
+                "Deadlift",
+                new Uri("Images/icon_deadlift.png", UriKind.Relative),
+                "No Desc",
+                lungeStart,
+                lungeEnd
+                ));
+
+            items.Add(new Action("Crunch",
+                "Crunch",
+                new Uri("Images/icon_crunch.png", UriKind.Relative),
+                "No Desc",
+                lungeStart,
+                lungeEnd
+                ));
+
+            items.Add(new Action("PushUp",
+                "Push Up",
+                new Uri("Images/icon_pushup.png", UriKind.Relative),
+                "No Desc",
+                lungeStart,
+                lungeEnd
+                ));
+
         }
 
         public ObservableCollection<Action> Actions

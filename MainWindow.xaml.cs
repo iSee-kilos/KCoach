@@ -131,8 +131,7 @@ namespace KCoach
 
         private void ReaderMultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
-            if (!inMatch)
-                return;
+
 
             if (pauseFlag)
             {
