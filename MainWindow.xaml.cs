@@ -150,15 +150,16 @@ namespace KCoach
                     String s2 = "successful movements: " + n_succ_movement.ToString();
                     String s3 = "success ratio: " + ((double)((double)n_succ_movement / (double)n_total_movement) * 100).ToString() + "%";
                     Point p1 = new Point(); p1.X = canvas.ActualWidth - 300; p1.Y = 100;
-                    canvas.WirteText(p1, s1, Colors.Red);
+                    canvas.WirteText(p1, s1, Colors.Red, 20);
                     Point p2 = new Point(); p2.X = canvas.ActualWidth - 300; p2.Y = 200;
-                    canvas.WirteText(p2, s2, Colors.Red);
+                    canvas.WirteText(p2, s2, Colors.Red, 20);
                     Point p3 = new Point(); p3.X = canvas.ActualWidth - 300; p3.Y = 300;
-                    canvas.WirteText(p3, s3, Colors.Red);
+                    canvas.WirteText(p3, s3, Colors.Red, 20);
                     // canvas.UpdateLayout();
                     Boolean steadyFlag = false;
                     
                     bodies = new Body[frame.BodyFrameSource.BodyCount];
+                    frame.GetAndRefreshBodyData(bodies);
 
                     if (isSteady())
                     {
@@ -200,9 +201,6 @@ namespace KCoach
                         sampleCounter = 0;
                     }
 
-                    
-
-                    frame.GetAndRefreshBodyData(bodies);
                     foreach (var body in bodies)
                     {
                         if (body != null)
@@ -290,6 +288,7 @@ namespace KCoach
         {
             if (oldBodies == null || bodies == null)
                 return false;
+
 
             var body_len = oldBodies.Count;
             double delta = 0.03;
