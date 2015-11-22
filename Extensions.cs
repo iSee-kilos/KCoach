@@ -371,6 +371,9 @@ namespace KCoach
             if (!inCanvas(canvas, position))
                 return;
 
+            if (position.X == double.NaN || position.Y == double.NaN)
+                return;
+
             SolidColorBrush fill = new SolidColorBrush(c);
             if (inferred)
             {
@@ -399,6 +402,9 @@ namespace KCoach
             {
                 fill.Opacity = 0.60d;
             }
+
+            if (first.X == double.NaN || first.Y == double.NaN || second.X == double.NaN || second.Y == double.NaN)
+                return;
 
             Line line = new Line
             {

@@ -27,7 +27,7 @@ namespace KCoach
         private static int steadyCounter;
         private static int sampleCounter;
 
-        private static int IS_STEADY = 10;
+        private static int IS_STEADY = 50;
 
         private static int SAMPLE_THR = 10;
 
@@ -44,6 +44,10 @@ namespace KCoach
         5 end
         */
         private static int stage = 0;
+        private static bool startFlag = false;
+        private static bool pauseFlag = false;
+        private static int PAUSE_INTERVAL = 60;
+        private static int pauseCounter = 0;
 
         private static int n_total_movement = 0;
         private static int n_succ_movement = 0;
@@ -127,8 +131,22 @@ namespace KCoach
 
         private void ReaderMultiSourceFrameArrived(object sender, MultiSourceFrameArrivedEventArgs e)
         {
+            if (!inMatch)
+                return;
 
-
+            if (pauseFlag)
+            {
+                pauseCounter++;
+                if (pauseCounter > PAUSE_INTERVAL)
+                {
+                    pauseFlag = false;
+                    pauseCounter = 0;
+                    steadyCounter = 0;
+                    IS_STEADY = 50;
+                    startFlag = false;
+                }
+                return;
+            }
             var reference = e.FrameReference.AcquireFrame();
 
             using (var frame = reference.DepthFrameReference.AcquireFrame())
@@ -149,12 +167,20 @@ namespace KCoach
                     String s1 = "total movements: " + n_total_movement.ToString();
                     String s2 = "successful movements: " + n_succ_movement.ToString();
                     String s3 = "success ratio: " + ((double)((double)n_succ_movement / (double)n_total_movement) * 100).ToString() + "%";
+                    String s4_1 = "Start pls!";
+                    String s4_2 = "Keep moving!";
                     Point p1 = new Point(); p1.X = canvas.ActualWidth - 300; p1.Y = 100;
                     canvas.WirteText(p1, s1, Colors.Red, 20);
                     Point p2 = new Point(); p2.X = canvas.ActualWidth - 300; p2.Y = 200;
                     canvas.WirteText(p2, s2, Colors.Red, 20);
                     Point p3 = new Point(); p3.X = canvas.ActualWidth - 300; p3.Y = 300;
                     canvas.WirteText(p3, s3, Colors.Red, 20);
+                    Point p4 = new Point(); p4.X = canvas.ActualWidth - 300; p4.Y = 400;
+                    if (startFlag)
+                        canvas.WirteText(p4, s4_2, Colors.Red, 20);
+                    else
+                        canvas.WirteText(p4, s4_1, Colors.Red, 20);
+
                     // canvas.UpdateLayout();
                     Boolean steadyFlag = false;
                     
@@ -222,40 +248,75 @@ namespace KCoach
                                     JointType[] wrongJoints = null;
 
 
-                                    if (stage == 0 && steadyFlag)
-                                    {
-                                        stage = 1;
-                                        n_total_movement++;
-                                    }
-                                    else if (stage == 1 && steadyFlag)
-                                    {
-                                        stage = 2;
-                                    }
-                                    else if (stage == 2 && !steadyFlag)
-                                    {
-                                        stage = 3;
-                                    }
-                                    else if (stage == 3 && steadyFlag)
-                                    {
-                                        n_succ_movement++;
-                                        stage = 4;
-                                    }
-                                    else if (stage == 4 && steadyFlag)
-                                    {
-                                        stage = 5;
-                                    }
-                                    else if (stage == 5 && !steadyFlag)
-                                    {
-                                        stage = 0;
-                                    }
+                                    //if (stage == 0 && steadyFlag)
+                                    //{
+                                    //    stage = 1;
+                                    //}
+                                    //else if (stage == 1 && steadyFlag)
+                                    //{
+                                    //    stage = 2;
+                                    //}
+                                    //else if (stage == 2 && !steadyFlag)
+                                    //{
+                                    //    stage = 3;
+                                    //}
+                                    //else if (stage == 3 && steadyFlag)
+                                    //{
+                                    //    stage = 4;
+                                    //}
+                                    //else if (stage == 4 && steadyFlag)
+                                    //{
+                                    //    stage = 5;
+                                    //}
+                                    //else if (stage == 5 && !steadyFlag)
+                                    //{
+                                    //    stage = 0;
+                                    //}
 
-                                    if (stage == 1)
+                                    //if (stage == 1)
+                                    //{
+                                    //    wrongJoints = match(currentAction.StartTemplate, angles);
+                                    //    if (wrongJoints.Length == 0)
+                                    //        n_total_movement++;
+                                    //}
+                                    //else if (stage == 4)
+                                    //{
+                                    //    wrongJoints = match(currentAction.EndTemplate, angles);
+                                    //    if (wrongJoints.Length == 0)
+                                    //        n_succ_movement++;
+                                    //}
+                                    if (!startFlag && steadyFlag)
                                     {
                                         wrongJoints = match(currentAction.StartTemplate, angles);
+                                        if (wrongJoints.Length == 0)
+                                        {
+                                            startFlag = true;
+                                            steadyCounter = 0;
+                                            IS_STEADY = 80;
+                                            n_total_movement++;
+                                        }
+                                            
                                     }
-                                    else if (stage == 4)
+                                    else if (startFlag && steadyFlag)
                                     {
+                                        Point p5 = new Point(); p5.X = canvas.ActualWidth - 300; p5.Y = 450;
                                         wrongJoints = match(currentAction.EndTemplate, angles);
+                                        if (wrongJoints.Length == 0)
+                                        {
+                                            n_succ_movement++;
+                                            startFlag = false;
+                                            IS_STEADY = 50;
+                                            pauseFlag = true;
+                                            canvas.WirteText(p5, "Suceess", Colors.Red, 20);
+                                            canvas.WirteText(p4, "", Colors.Red, 20);
+                                        }
+                                        else
+                                        {
+                                            canvas.WirteText(p5, "Failed", Colors.Red, 20);
+                                            canvas.WirteText(p4, "", Colors.Red, 20);
+                                        }
+                                            
+                                        pauseFlag = true;
                                     }
 
                                     canvas.DrawSkeleton(body, sensor, steadyFlag);

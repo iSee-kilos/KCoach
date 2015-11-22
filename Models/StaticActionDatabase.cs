@@ -16,28 +16,48 @@ namespace KCoach
 
         public StaticActionDatabase()
         {
-            var squatTemplate = new Dictionary<JointType, int>()
+            var squatStart = new Dictionary<JointType, int>()
             {
                 {JointType.KneeLeft, 180 },
                 {JointType.KneeRight, 180 },
-                {JointType.SpineBase, 180 },
-                {JointType.SpineMid, 180 }
+            };
+
+            var squatEnd = new Dictionary<JointType, int>()
+            {
+                {JointType.KneeLeft, 90 },
+                {JointType.KneeRight, 90 },
+            };
+
+            var lungeStart = new Dictionary<JointType, int>()
+            {
+                {JointType.KneeLeft, 175 },
+                {JointType.KneeRight, 175 },
+                {JointType.SpineBase, 70 },
+                {JointType.SpineMid, 150 }
+            };
+
+            var lungeEnd = new Dictionary<JointType, int>()
+            {
+                {JointType.KneeLeft, 90 },
+                {JointType.KneeRight, 90 },
+                {JointType.SpineBase, 90 },
+                {JointType.SpineMid, 90 }
             };
 
             items.Add(new Action("Squat",
                 "Squat",
                 new Uri("Images/icon_squat.png", UriKind.Relative),
                 "No Desc",
-                squatTemplate,
-                squatTemplate
+                squatStart,
+                squatEnd
                 ));
 
             items.Add(new Action("Lunge",
                 "Lunge",
                 new Uri("Images/icon_lunge.png", UriKind.Relative),
                 "No Desc",
-                squatTemplate,
-                squatTemplate
+                lungeStart,
+                lungeEnd
                 ));
 
         }
