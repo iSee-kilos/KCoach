@@ -22,12 +22,12 @@ namespace KCoach
         private ImageSource image = null;
 
         private Uri imagePath = null;
-
         private IDictionary<JointType, int> startTemplate;
 
         private IDictionary<JointType, int> endTemplate;
 
         public Action(string uniqueId, string title, Uri imagePath, string description, IDictionary<JointType, int> startTemplate, IDictionary<JointType, int> endTemplate)
+
         {
             this.uniqueId = uniqueId;
             this.title = title;
@@ -61,6 +61,7 @@ namespace KCoach
         }
 
         public IDictionary<JointType, int> EndTemplate
+
         {
             get { return this.endTemplate; }
         }

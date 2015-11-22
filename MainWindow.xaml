@@ -6,7 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:KCoach"
         Name="KCoachWindow"
-        Title="K-Coach"
+        Title="Coach.K"
         mc:Ignorable="d"
         d:DesignWidth="1200"
         d:DesignHeight="700"
@@ -30,9 +30,9 @@
                 </Grid.ColumnDefinitions>
 
                 <Button x:Name="backButton" Visibility="Hidden" Grid.Column="0" Style="{StaticResource BackButtonStyle}" Click="GoBack" />
-                <Image Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" Source="Images\kcoach_logo.png" Stretch="Fill" Margin="0 0 0 4" Width="400"/>
+                <Image Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" Source="Images\sil_logo.png" Stretch="None" Margin="0 20 0 4"/>
                 <Image Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center"  Source="Images\Logo.png" Stretch="None" Margin="0 0 36 4"/>
-                <TextBlock x:Name="textBlock" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0 130 0 0" TextWrapping="Wrap" Text="Select An Action:" Grid.ColumnSpan="2" FontSize="30" FontWeight="Bold"/>
+                <!--<TextBlock x:Name="textBlock" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0 140 0 0" TextWrapping="Wrap" Text="Select An Action:" Grid.ColumnSpan="2" FontSize="30" FontWeight="Bold"/>-->
             </Grid>
 
             <ContentControl Grid.Row="1" x:Name="navigationRegion">

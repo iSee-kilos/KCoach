@@ -123,7 +123,7 @@ namespace KCoach
             return ScaleTo(joint, width, height, 1.0f, 1.0f);
         }
 
-        public static IReadOnlyDictionary<JointType, int> GetJointAngles(this Body body)
+        public static IDictionary<JointType, int> GetJointAngles(this Body body)
         {
             // write angle
             // knee
@@ -270,7 +270,7 @@ namespace KCoach
             canvas.DrawBone(body.Joints[JointType.AnkleLeft], body.Joints[JointType.FootLeft], sensor);
             canvas.DrawBone(body.Joints[JointType.AnkleRight], body.Joints[JointType.FootRight], sensor);
 
-            IReadOnlyDictionary<JointType, int> res = GetJointAngles(body);
+            IDictionary<JointType, int> res = GetJointAngles(body);
             foreach (var kv in res)
             {
                 Point p = scalePoint(body.Joints[kv.Key].Project(sensor), canvas.ActualWidth, canvas.ActualHeight);
