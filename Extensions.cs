@@ -274,7 +274,7 @@ namespace KCoach
             foreach (var kv in res)
             {
                 Point p = scalePoint(body.Joints[kv.Key].Project(sensor), canvas.ActualWidth, canvas.ActualHeight);
-                WirteText(canvas, p, kv.Value.ToString(), Colors.MediumVioletRed);
+                WirteText(canvas, p, kv.Value.ToString(), Colors.MediumVioletRed, 20.0);
             }
 
             //Point q = new Point();
@@ -413,7 +413,7 @@ namespace KCoach
             canvas.Children.Add(line);
         }
 
-        public static void WirteText(this Canvas canvas, Point p, String text, Color c)
+        public static void WirteText(this Canvas canvas, Point p, String text, Color c, double fontSize)
         {
             TextBlock textBlock = new TextBlock();
             // textBlock.UpdateLayout();
@@ -425,6 +425,8 @@ namespace KCoach
             textBlock.Text = text;
             SolidColorBrush fill = new SolidColorBrush(c);
             textBlock.Foreground = fill;
+            textBlock.FontSize = fontSize;
+            textBlock.FontFamily = new FontFamily("Arial Rounded MT Bold");
 
             canvas.Children.Add(textBlock); // Add to Canvas
         }
