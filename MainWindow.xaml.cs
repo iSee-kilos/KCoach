@@ -158,27 +158,29 @@ namespace KCoach
 
             using (var frame = reference.BodyFrameReference.AcquireFrame())
             {
-                
+                if (!inMatch)
+                    return;
+
                 if (frame != null)
                 {
                     sampleCounter++;
                     canvas.Children.Clear();
-                    String s1 = "total movements: " + n_total_movement.ToString();
-                    String s2 = "successful movements: " + n_succ_movement.ToString();
-                    String s3 = "success ratio: " + ((double)((double)n_succ_movement / (double)n_total_movement) * 100).ToString() + "%";
-                    String s4_1 = "Start pls!";
+                    String s1 = "Total: " + n_total_movement.ToString();
+                    String s2 = "Sussess: " + n_succ_movement.ToString();
+                    String s3 = "Ratio: " + ((double)((double)n_succ_movement / (double)n_total_movement) * 100).ToString() + "%";
+                    String s4_1 = "Start!";
                     String s4_2 = "Keep moving!";
-                    Point p1 = new Point(); p1.X = canvas.ActualWidth - 300; p1.Y = 100;
-                    canvas.WirteText(p1, s1, Colors.Red, 20);
-                    Point p2 = new Point(); p2.X = canvas.ActualWidth - 300; p2.Y = 200;
-                    canvas.WirteText(p2, s2, Colors.Red, 20);
-                    Point p3 = new Point(); p3.X = canvas.ActualWidth - 300; p3.Y = 300;
-                    canvas.WirteText(p3, s3, Colors.Red, 20);
-                    Point p4 = new Point(); p4.X = canvas.ActualWidth - 300; p4.Y = 400;
+                    Point p1 = new Point(); p1.X = canvas.ActualWidth - 200; p1.Y = canvas.ActualHeight - 200;
+                    canvas.WirteText(p1, s1, Colors.Black, 20);
+                    Point p2 = new Point(); p2.X = canvas.ActualWidth - 200; p2.Y = canvas.ActualHeight - 150;
+                    canvas.WirteText(p2, s2, Colors.Black, 20);
+                    Point p3 = new Point(); p3.X = canvas.ActualWidth - 200; p3.Y = canvas.ActualHeight - 100;
+                    canvas.WirteText(p3, s3, Colors.Black, 20);
+                    Point p4 = new Point(); p4.X = canvas.ActualWidth - 200; p4.Y = canvas.ActualHeight - 250;
                     if (startFlag)
-                        canvas.WirteText(p4, s4_2, Colors.Red, 20);
+                        canvas.WirteText(p4, s4_2, Colors.DeepPink, 25);
                     else
-                        canvas.WirteText(p4, s4_1, Colors.Red, 20);
+                        canvas.WirteText(p4, s4_1, Colors.DeepPink, 25);
 
                     // canvas.UpdateLayout();
                     Boolean steadyFlag = false;
@@ -291,14 +293,15 @@ namespace KCoach
                                         {
                                             startFlag = true;
                                             steadyCounter = 0;
-                                            IS_STEADY = 80;
+                                            steadyFlag = false;
+                                            IS_STEADY = 60;
                                             n_total_movement++;
                                         }
                                             
                                     }
                                     else if (startFlag && steadyFlag)
                                     {
-                                        Point p5 = new Point(); p5.X = canvas.ActualWidth - 300; p5.Y = 450;
+                                        Point p5 = new Point(); p5.X = canvas.ActualWidth - 200; p5.Y = canvas.ActualHeight - 300;
                                         wrongJoints = match(currentAction.EndTemplate, angles);
                                         if (wrongJoints.Length == 0)
                                         {
@@ -306,7 +309,7 @@ namespace KCoach
                                             startFlag = false;
                                             IS_STEADY = 50;
                                             pauseFlag = true;
-                                            canvas.WirteText(p5, "Suceess", Colors.Red, 20);
+                                            canvas.WirteText(p5, "Suceess", Colors.Blue, 20);
                                             canvas.WirteText(p4, "", Colors.Red, 20);
                                         }
                                         else
@@ -351,7 +354,7 @@ namespace KCoach
 
 
             var body_len = oldBodies.Count;
-            double delta = 0.03;
+            double delta = 0.04;
             if (bodies.Count < body_len)
             {
                 body_len = bodies.Count;
@@ -363,8 +366,8 @@ namespace KCoach
                 Body nb = bodies[i];
                 if (ob == null || nb == null)
                     continue;
-                if (match(ob.GetJointAngles(), nb.GetJointAngles()).Length > 0)
-                    return false;
+                //if (match(ob.GetJointAngles(), nb.GetJointAngles()).Length > 0)
+                //    return false;
                 foreach (var key in ob.Joints.Keys)
                 {
                     var oj = ob.Joints[key];

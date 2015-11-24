@@ -26,22 +26,21 @@ namespace KCoach
             {
                 {JointType.KneeLeft, 90 },
                 {JointType.KneeRight, 90 },
+                {JointType.SpineBase, 30 }
             };
 
             var lungeStart = new Dictionary<JointType, int>()
             {
-                {JointType.KneeLeft, 175 },
-                {JointType.KneeRight, 175 },
-                {JointType.SpineBase, 70 },
-                {JointType.SpineMid, 150 }
+                {JointType.KneeLeft, 180 },
+                {JointType.KneeRight, 180 }
             };
 
             var lungeEnd = new Dictionary<JointType, int>()
             {
-                {JointType.KneeLeft, 90 },
-                {JointType.KneeRight, 90 },
-                {JointType.SpineBase, 90 },
-                {JointType.SpineMid, 90 }
+                {JointType.KneeLeft, 80 },
+                {JointType.KneeRight, 110 },
+                {JointType.SpineBase, 100 },
+                {JointType.SpineMid, 140 }
             };
 
             items.Add(new Action("Squat",

@@ -371,7 +371,7 @@ namespace KCoach
             if (!inCanvas(canvas, position))
                 return;
 
-            if (position.X == double.NaN || position.Y == double.NaN)
+            if (Double.IsNaN(position.X) || Double.IsNaN(position.Y))
                 return;
 
             SolidColorBrush fill = new SolidColorBrush(c);
@@ -402,8 +402,8 @@ namespace KCoach
             {
                 fill.Opacity = 0.60d;
             }
-
-            if (first.X == double.NaN || first.Y == double.NaN || second.X == double.NaN || second.Y == double.NaN)
+            
+            if (Double.IsNaN(first.X) || Double.IsNaN(first.Y) || Double.IsNaN(second.X) || Double.IsNaN(second.Y))
                 return;
 
             Line line = new Line
